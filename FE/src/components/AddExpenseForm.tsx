@@ -54,13 +54,6 @@ const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onAddExpense }) => {
             className={inputClassName}
           >
             <option value="">Select category</option>
-            <option value="Utilities">Utilities</option>
-            <option value="Food">Food</option>
-            <option value="Transportation">Transportation</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Health">Health</option>
-            <option value="Education">Education</option>
-            <option value="Other">Other</option>
           </select>
         </div>
         <div className="flex justify-end">

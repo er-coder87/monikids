@@ -17,7 +17,7 @@ import { addExpense, deleteExpense } from '../services/ExpenseApi';
 import { getAmountAtTimeData, getAccumulatedAmountData } from '../utilities/expenseUtils';
 import UnauthorizedPage from './UnauthorizedPage';
 import { NavBar } from '../components/NavBar';
-import { endOfMonth, isWithinInterval, startOfMonth, endOfYear, startOfYear } from 'date-fns';
+import { endOfMonth, startOfMonth, endOfYear, startOfYear } from 'date-fns';
 import { TimePeriodSelector } from '../components/TimePeriodSelector';
 import { NotesTab } from './tabs/NotesTab';
 import { CategoryManager } from '../components/CategoryManager';
@@ -28,19 +28,8 @@ import { useTimePeriod } from '../contexts/TimePeriodContext';
 type Tab = 'expenses' | 'notes' | 'reminders' | 'budget'
 
 const DEFAULT_CATEGORIES: Category[] = [
-  { id: '1', name: 'Utilities', color: '#3B82F6' },
-  { id: '2', name: 'Food', color: '#10B981' },
-  { id: '3', name: 'Transportation', color: '#F59E0B' },
-  { id: '4', name: 'Entertainment', color: '#8B5CF6' },
-  { id: '5', name: 'Health', color: '#EF4444' },
-  { id: '6', name: 'Education', color: '#EC4899' },
-  { id: '7', name: 'Other', color: '#6B7280' },
 ]
 
-interface Goal {
-  monthly: number;
-  yearly: number;
-}
 
 const Dashboard = () => {
   // --- State Variables ---
