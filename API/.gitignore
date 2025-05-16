@@ -1,0 +1,36 @@
+# Compiled Object Code and Assembly Output
+**/bin/*
+**/obj/*
+
+
+# Build Results and Logs
+*.log
+*.err
+*.out
+*.ilk
+*.pdb
+*.tlog
+*.tracelog
+*.dcp
+*.metagen
+*.manifest
+*.cachefile
+[Dd]ebug/
+[Rr]elease/
+[Aa]ny [CPU]/
+_PublishedWebsites/
+publish/
+_Packages/
+Package Cache/
+UpgradeLog.xml
+ServiceFabricBackup/
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains Rider
+.idea/
+
+# Testfiles
+UploadedFiles/
+httprequest/
