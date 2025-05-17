@@ -3,5 +3,5 @@ export interface Expense {
   date: Date; // Maps from DateTime
   description: string; // Maps from TransactionDetails
   amount: number; // Maps from decimal
-  category: string; // Maps from Category?.Name
+  category?: string; // Maps from Category?.Name
 }

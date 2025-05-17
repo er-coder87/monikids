@@ -6,7 +6,7 @@ interface UseFetchExpensesOutput {
   fetchedExpenses: Expense[];
   loading: boolean;
   error: string | null;
-  refetch: () => void; // Add the refetch function to the interface
+  refetch: () => Promise<void>;
 }
 
 const useFetchExpenses = (): UseFetchExpensesOutput => {

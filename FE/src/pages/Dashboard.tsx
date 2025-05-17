@@ -1,52 +1,33 @@
-import { Sun, Moon, DollarSign, Cog, StickyNote, LayoutDashboard } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Sun, Moon, DollarSign, Cog, LayoutDashboard, Home, PiggyBank } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
-import AddExpenseForm from '../components/AddExpenseForm';
-import FileUpload from '../components/FileUpload';
-import ExpenseTable from '../components/ExpenseTable';
-import ExpenseTrendChart from '../components/ExpenseTrendChart';
-import ExpenseCategoryChart from '../components/ExpenseCategoryChart';
 import useDarkMode from '../hooks/useDarkMode';
 import useFetchExpenses from '../hooks/useFetchExpenses';
 import { ExportCsvModal } from '../modals/ExportCsvModal';
 import { ImportCsvModal } from '../modals/ImportCsvModal';
 import { Expense } from '../models/Expense';
-import { CreateExpense } from '../services/CreateExpense';
-import { addExpense, deleteExpense } from '../services/ExpenseApi';
-import { getAmountAtTimeData, getAccumulatedAmountData } from '../utilities/expenseUtils';
 import UnauthorizedPage from './UnauthorizedPage';
 import { NavBar } from '../components/NavBar';
-import { endOfMonth, startOfMonth, endOfYear, startOfYear } from 'date-fns';
-import { TimePeriodSelector } from '../components/TimePeriodSelector';
-import { NotesTab } from './tabs/NotesTab';
-import { CategoryManager } from '../components/CategoryManager';
-import type { Category } from '../types/category';
 import { BudgetTab } from "./tabs/BudgetTab";
+import { DashboardTab } from "./tabs/DashboardTab";
+import { PiggyBankTab } from "./tabs/PiggyBankTab";
+import { ExpensesTab } from "./tabs/ExpensesTab";
 import { useTimePeriod } from '../contexts/TimePeriodContext';
 
-type Tab = 'expenses' | 'notes' | 'reminders' | 'budget'
-
-const DEFAULT_CATEGORIES: Category[] = [
-]
-
+type Tab = 'dashboard' | 'piggy-bank' | 'expenses' | 'budget';
 
 const Dashboard = () => {
   // --- State Variables ---
-  const [activeTab, setActiveTab] = useState<Tab>('expenses')
+  const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
   const { isAuthenticated, logout } = useUser();
   const { fetchedExpenses, refetch } = useFetchExpenses();
-  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [amountAtTimeChartData, setAmountAtTimeChartData] = useState(getAmountAtTimeData(expenses));
-  const [accumulatedAmountChartData, setAccumulatedAmountChartData] = useState(getAccumulatedAmountData(expenses));
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const [dateFormat, setDateFormat] = useState<'dd-MM-yyyy' | 'yyyy-MM-dd'>('yyyy-MM-dd');
+  const [dateFormat, setDateFormat] = useState<'dd-MM-yyyy' | 'yyyy-MM-dd'>('dd-MM-yyyy');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const { selectedPeriod, currentMonth } = useTimePeriod();
 
   const navigate = useNavigate();
@@ -66,121 +47,11 @@ const Dashboard = () => {
     setIsExportModalOpen(true);
   };
 
-  const handleAddExpense = async (newExpenseData: CreateExpense) => {
-    try {
-      const response = await addExpense(newExpenseData); // Call your API to add the expense
-      if (response) {
-        // Assuming your API returns the newly created expense with an ID and date
-        setAllExpenses((prevExpenses) => [...prevExpenses, response]);
-        refetch(); // Reload data to ensure consistency
-      } else {
-        console.error('Failed to add expense.');
-        // Optionally show an error message to the user
-      }
-    } catch (error: any) {
-      console.error('Error adding expense:', error.message);
-      // Optionally show an error message
-    }
-  };
-
-  const handleEditExpense = async (id: string) => {
-    try {
-      // Find the expense to edit
-      const expenseToEdit = allExpenses.find(expense => expense.id === id);
-      if (!expenseToEdit) {
-        console.error('Expense not found');
-        return;
-      }
-
-      // Update the expense in the state
-      setAllExpenses(prevExpenses =>
-        prevExpenses.map(expense =>
-          expense.id === id ? expenseToEdit : expense
-        )
-      );
-
-      // Refetch to ensure consistency
-      await refetch();
-    } catch (error: any) {
-      console.error('Error editing expense:', error.message);
-    }
-  };
-
-  const handleDeleteExpense = async (id: string) => {
-    try {
-      await deleteExpense(id); // Call your API to delete the expense
-      setAllExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id));
-      refetch(); // Reload data after deletion
-    } catch (error: any) {
-      console.error('Error deleting expense:', error.message);
-      // Optionally show an error message
-    }
-  };
-
-  const handleExpensesUploaded = (newExpenses: Expense[]) => {
-    setAllExpenses((prevExpenses) => [...prevExpenses, ...newExpenses]);
-  };
-
   const handleExpensesImported = (newExpenses: Expense[]) => {
-    setAllExpenses((prevExpenses) => [...prevExpenses, ...newExpenses]);
-    // You might want to also send these to your API
+    refetch();
   };
-
-  const handleCategoryCreated = (category: Category) => {
-    setCategories(prev => [...prev, category])
-  }
-
-  const getDateRange = () => {
-    switch (selectedPeriod) {
-      case 'monthly':
-        return [startOfMonth(currentMonth), endOfMonth(currentMonth)]
-      case 'yearly':
-        return [startOfYear(currentMonth), endOfYear(currentMonth)]
-      case 'all':
-      default:
-        return [null, null]
-    }
-  }
 
   // --- Effects ---
-  useEffect(() => {
-    if (fetchedExpenses) {
-      setAllExpenses(fetchedExpenses);
-    }
-  }, [fetchedExpenses]);
-
-  useEffect(() => {
-    let filteredExpenses = [...allExpenses];
-
-    switch (selectedPeriod) {
-      case 'monthly':
-        const monthStart = startOfMonth(currentMonth);
-        const monthEnd = endOfMonth(currentMonth);
-        filteredExpenses = allExpenses.filter(expense => {
-          const date = new Date(expense.date);
-          return date >= monthStart && date <= monthEnd;
-        });
-        break;
-      case 'yearly':
-        const yearStart = startOfYear(currentMonth);
-        const yearEnd = endOfYear(currentMonth);
-        filteredExpenses = allExpenses.filter(expense => {
-          const date = new Date(expense.date);
-          return date >= yearStart && date <= yearEnd;
-        });
-        break;
-      case 'all':
-      default:
-        break;
-    }
-    setExpenses(filteredExpenses);
-  }, [allExpenses, selectedPeriod, currentMonth]);
-
-  useEffect(() => {
-    setAmountAtTimeChartData(getAmountAtTimeData(expenses));
-    setAccumulatedAmountChartData(getAccumulatedAmountData(expenses));
-  }, [expenses]);
-
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -189,9 +60,6 @@ const Dashboard = () => {
     }
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
-
-  // --- Computed Properties ---
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
@@ -227,64 +95,6 @@ const Dashboard = () => {
       <Icon className="h-5 w-5" />
       <span>{label}</span>
     </button>
-  )
-
-  const renderExpenses = () => (
-    <div className='flex flex-col space-y-4'>
-      <div className='flex justify-start'>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-fit">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="ml-3">
-              <div className="flex items-center space-x-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Expenses</p>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  ({expenses.length} {expenses.length === 1 ? 'expense' : 'expenses'})
-                </span>
-              </div>
-              <p className="text-xl font-semibold text-gray-900 dark:text-white">${totalExpenses.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 ">
-        {/* --- Charts --- */}
-        <div className="lg:col-span-2 flex flex-col space-y-4">
-          <ExpenseTrendChart
-            amountAtTimeChartData={amountAtTimeChartData}
-            accumulatedAmountChartData={accumulatedAmountChartData}
-            dateFormat={dateFormat}
-            selectedPeriod={selectedPeriod}
-            currentMonth={currentMonth}
-          />
-          <ExpenseCategoryChart
-            expenses={expenses}
-          />
-        </div>
-
-        {/* --- Forms and Upload --- */}
-        <div className="space-y-4">
-          <AddExpenseForm onAddExpense={handleAddExpense} />
-          <CategoryManager
-            onCategoryCreated={handleCategoryCreated}
-            existingCategories={categories}
-          />
-          <FileUpload onExpensesUploaded={handleExpensesUploaded} />
-        </div>
-      </div>
-
-      {/* --- Expense Table --- */}
-      <ExpenseTable
-        expenses={expenses}
-        onDelete={handleDeleteExpense}
-        onEdit={handleEditExpense}
-        dateFormat={dateFormat}
-        categories={categories}
-      />
-    </div>
   )
 
   return (
@@ -346,7 +156,7 @@ const Dashboard = () => {
                       <button
                         onClick={() => {
                           logout();
-                          navigate('/login'); // Redirect to login after logout
+                          navigate('/login');
                         }}
                         className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
                       >
@@ -362,32 +172,36 @@ const Dashboard = () => {
           {/* --- Main Content --- */}
           <div className="flex flex-col space-y-10">
             <div className="flex space-x-4">
+              <TabButton tab="piggy-bank" icon={PiggyBank} label="Piggy Bank" />
               <TabButton tab="expenses" icon={LayoutDashboard} label="Expenses" />
               <TabButton tab="budget" icon={DollarSign} label="Budget" />
-              <TabButton tab="notes" icon={StickyNote} label="Notes" />
+              <TabButton tab="dashboard" icon={Home} label="Dashboard" />
             </div>
-
-            {activeTab === 'expenses' && (
-              <div className="flex justify-start">
-                <TimePeriodSelector dateFormat={dateFormat} />
-              </div>
-            )}
           </div>
 
-          {activeTab === 'expenses' && renderExpenses()}
-          {activeTab === 'notes' && <NotesTab />}
+          {activeTab === 'dashboard' && <DashboardTab />}
+          {activeTab === 'piggy-bank' && <PiggyBankTab dateFormat={dateFormat} />}
+          {activeTab === 'expenses' && (
+            <ExpensesTab
+              fetchedExpenses={fetchedExpenses}
+              refetch={refetch}
+              dateFormat={dateFormat}
+              selectedPeriod={selectedPeriod}
+              currentMonth={currentMonth}
+            />
+          )}
           {activeTab === 'budget' && (
             <BudgetTab
-              categories={categories}
-              expenses={expenses}
-              onEditExpense={handleEditExpense}
-              onDeleteExpense={handleDeleteExpense}
+              categories={[]}
+              expenses={[]}
+              onEditExpense={async () => { }}
+              onDeleteExpense={async () => { }}
             />
           )}
 
           {/* Modals */}
           {isImportModalOpen && <ImportCsvModal onClose={() => setIsImportModalOpen(false)} onExpensesImported={handleExpensesImported} />}
-          {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} expenses={allExpenses} />}
+          {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} expenses={[]} />}
         </div>
       </div>
     </div>
