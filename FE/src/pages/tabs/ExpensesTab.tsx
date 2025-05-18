@@ -2,7 +2,6 @@ import { DollarSign } from 'lucide-react'
 import { Expense } from '../../models/Expense'
 import { CreateExpense } from '../../services/CreateExpense'
 import AddExpenseForm from '../../components/AddExpenseForm'
-import FileUpload from '../../components/FileUpload'
 import ExpenseTable from '../../components/ExpenseTable'
 import ExpenseTrendChart from '../../components/ExpenseTrendChart'
 import ExpenseCategoryChart from '../../components/ExpenseCategoryChart'
@@ -169,7 +168,6 @@ export function ExpensesTab({
                         onCategoryCreated={handleCategoryCreated}
                         existingCategories={categories}
                     />
-                    <FileUpload onExpensesUploaded={handleExpensesUploaded} />
                 </div>
             </div>
 
