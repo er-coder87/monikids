@@ -4,6 +4,7 @@ import { AppleIcon, Facebook, Mail } from 'lucide-react';
 import { NavBar } from '../components/NavBar';
 import { useUser } from '../contexts/UserContext';
 import { useGoogleLogin } from '@react-oauth/google';
+import { apiClient } from '../services/ApiClient';
 
 export default function SignUp() {
     const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function SignUp() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [loginError, setLoginError] = useState('');
-    const { login } = useUser();
+    const { login, loginWithGoogle } = useUser();
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,23 +39,18 @@ export default function SignUp() {
         setLoading(true);
 
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + '/auth/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
+            // First create the account
+            const response = await apiClient.post<{ user: { id: string; email: string; name: string } }>('/auth/signup', {
+                email,
+                password
             });
 
-            const data = await response.json();
+            if (response.error) throw new Error(response.error);
+            if (!response.data?.user) throw new Error('No user data received');
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to create account');
-            }
-
-            localStorage.setItem('authToken', data.token);
-            login(data, data.token);
-            navigate('/dashboard')
+            // Then log in with the new credentials
+            await login(email, password);
+            navigate('/dashboard');
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -74,35 +70,14 @@ export default function SignUp() {
 
                 const googleUserData = await googleUser.json();
 
-                // 2. Send user info to your backend for login / registration
-                const response = await fetch(import.meta.env.VITE_API_URL + "/auth/google", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        googleUser: googleUserData,
-                        accessToken: tokenResponse.access_token,
-                    }),
+                // 2. Log in with Google
+                await loginWithGoogle({
+                    email: googleUserData.email,
+                    name: googleUserData.name,
+                    accessToken: tokenResponse.access_token
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    // Assuming your backend returns user data (e.g., id, name, email)
-                    const userData = {
-                        id: '1',
-                        name: data.name,
-                        email: data.email,
-                    };
-
-                    localStorage.setItem('authToken', data.token);
-                    login(userData, data.token);
-                    navigate('/dashboard');
-                } else {
-                    const errorData = await response.json();
-                    console.error('Backend login failed:', errorData);
-                    setLoginError('Google login failed. Please try again.');
-                }
+                navigate('/dashboard');
             } catch (error) {
                 console.error('Error during Google login:', error);
                 setLoginError('Google login failed. Please try again.');

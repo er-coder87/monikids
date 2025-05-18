@@ -11,34 +11,26 @@ import { TimePeriodSelector } from '../../components/TimePeriodSelector'
 import { getAmountAtTimeData, getAccumulatedAmountData } from '../../utilities/expenseUtils'
 import type { Category } from '../../types/category'
 import { useState, useEffect } from 'react'
-import { addExpense, deleteExpense } from '../../services/ExpenseApi'
+import { useExpenses } from '../../contexts/ExpenseContext'
+import { useToast } from '../../contexts/ToastContext'
 
 interface ExpensesTabProps {
-    fetchedExpenses: Expense[] | null
-    refetch: () => Promise<void>
     dateFormat: 'dd-MM-yyyy' | 'yyyy-MM-dd'
     selectedPeriod: 'monthly' | 'yearly' | 'all'
     currentMonth: Date
 }
 
 export function ExpensesTab({
-    fetchedExpenses,
-    refetch,
     dateFormat,
     selectedPeriod,
     currentMonth
 }: ExpensesTabProps) {
-    const [allExpenses, setAllExpenses] = useState<Expense[]>([])
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [amountAtTimeChartData, setAmountAtTimeChartData] = useState(getAmountAtTimeData(expenses))
     const [accumulatedAmountChartData, setAccumulatedAmountChartData] = useState(getAccumulatedAmountData(expenses))
     const [categories, setCategories] = useState<Category[]>([])
-
-    useEffect(() => {
-        if (fetchedExpenses) {
-            setAllExpenses(fetchedExpenses)
-        }
-    }, [fetchedExpenses])
+    const { expenses: allExpenses, addExpense, updateExpense, deleteExpense } = useExpenses()
+    const { addToast } = useToast()
 
     useEffect(() => {
         let filteredExpenses = [...allExpenses]
@@ -74,15 +66,13 @@ export function ExpensesTab({
 
     const handleAddExpense = async (newExpenseData: CreateExpense) => {
         try {
-            const response = await addExpense(newExpenseData)
-            if (response) {
-                setAllExpenses((prevExpenses) => [...prevExpenses, response])
-                refetch()
-            } else {
-                console.error('Failed to add expense.')
-            }
+            await addExpense({
+                ...newExpenseData,
+                date: newExpenseData.date || new Date()
+            })
         } catch (error: any) {
             console.error('Error adding expense:', error.message)
+            addToast('Failed to add expense', 'error')
         }
     }
 
@@ -94,30 +84,36 @@ export function ExpensesTab({
                 return
             }
 
-            setAllExpenses(prevExpenses =>
-                prevExpenses.map(expense =>
-                    expense.id === id ? expenseToEdit : expense
-                )
-            )
-
-            await refetch()
+            await updateExpense(expenseToEdit)
         } catch (error: any) {
             console.error('Error editing expense:', error.message)
+            addToast('Failed to update expense', 'error')
         }
     }
 
     const handleDeleteExpense = async (id: string) => {
         try {
             await deleteExpense(id)
-            setAllExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id))
-            refetch()
         } catch (error: any) {
             console.error('Error deleting expense:', error.message)
+            addToast('Failed to delete expense', 'error')
         }
     }
 
-    const handleExpensesUploaded = (newExpenses: Expense[]) => {
-        setAllExpenses((prevExpenses) => [...prevExpenses, ...newExpenses])
+    const handleExpensesUploaded = async (newExpenses: Expense[]) => {
+        try {
+            for (const expense of newExpenses) {
+                await addExpense({
+                    description: expense.description,
+                    amount: expense.amount,
+                    category: expense.category,
+                    date: expense.date
+                })
+            }
+        } catch (error: any) {
+            console.error('Error uploading expenses:', error.message)
+            addToast('Failed to upload expenses', 'error')
+        }
     }
 
     const handleCategoryCreated = (category: Category) => {
@@ -151,7 +147,7 @@ export function ExpensesTab({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* --- Charts --- */}
                 <div className="lg:col-span-2 flex flex-col space-y-4">
                     <ExpenseTrendChart

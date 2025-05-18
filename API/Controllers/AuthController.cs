@@ -5,6 +5,8 @@ using ExpenseTrackerApi.Controllers.Dtos;
 using ExpenseTrackerApi.Controllers.RequestDtos;
 using ExpenseTrackerApi.Models;
 using ExpenseTrackerApi.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,8 +22,14 @@ namespace ExpenseTrackerApi.Controllers
         [Authorize(AuthenticationSchemes = "Bearer")] // Ensure only requests with a valid Bearer token reach this
         public IActionResult ValidateToken()
         {
-            // If the [Authorize] attribute succeeds, it means the token is valid
-            return Ok();
+            var user = User.Identity?.Name;
+            return Ok(new { 
+                user = new { 
+                    id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                    email = User.FindFirst(ClaimTypes.Email)?.Value,
+                    name = User.FindFirst(ClaimTypes.Name)?.Value
+                } 
+            });
         }
         
         // TODO - block signup until authz is implemented
@@ -110,29 +118,27 @@ namespace ExpenseTrackerApi.Controllers
                 // Create a new user in your database
                 user = new User
                 {
-                    Email = request.GoogleUser.Email, 
+                    Email = request.GoogleUser.Email,
                     GoogleId = request.GoogleUser.Sub,
                 };
                 await userService.CreateAsync(user);
             }
             else
             {
-                // Link the Google ID to the existing user
                 user.GoogleId = request.GoogleUser.Sub;
                 await userService.UpdateAsync(user);
             }
             
-            // Now issue your app's JWT
             var token = GenerateJwtToken(user);
-
-            return Ok(new
+            Response.Cookies.Append("jwt", token, new CookieOptions
             {
-                token, User = new UserDto()
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                }
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
             });
+            
+            return Ok(new { user = new { id = user.Id, email = user.Email } });
         }
 
         private string GenerateJwtToken(User user)

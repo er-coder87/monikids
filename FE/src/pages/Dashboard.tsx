@@ -17,13 +17,14 @@ import { useTimePeriod } from '../contexts/TimePeriodContext';
 import { SavingsTab } from './tabs/SavingsTab';
 import { ChoresTab } from './tabs/ChoresTab';
 import { SavingsProvider } from '../contexts/SavingsContext';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 type Tab = 'dashboard' | 'piggy-bank' | 'chores' | 'savings' | 'expenses' | 'budget';
 
 const Dashboard = () => {
   // --- State Variables ---
   const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
-  const { isAuthenticated, logout } = useUser();
+  const { isAuthenticated, isLoading, logout } = useUser();
   const { fetchedExpenses, refetch } = useFetchExpenses();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -92,6 +93,10 @@ const Dashboard = () => {
   }, [settingsRef, tabsRef]);
 
   // --- JSX ---
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   if (!isAuthenticated) {
     return <UnauthorizedPage />;
   }

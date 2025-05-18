@@ -1,42 +1,23 @@
-import { Check, CheckCircle2, DollarSign, Heart, ListChecks, Trash2 } from "lucide-react"
+import { Check, DollarSign, Heart, ListChecks, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useSavings } from "../../contexts/SavingsContext"
-
-interface Toast {
-    id: string
-    message: string
-    type: 'success' | 'error'
-}
-
-interface Chore {
-    id: string
-    description: string
-    frequency: number
-    savingAmount: number
-    completedCount: number
-    savingAdded?: boolean
-}
-
-interface GoodDeed {
-    stamps: number
-    maxStamps: number
-}
+import { useToast } from "../../contexts/ToastContext"
+import { Chore } from "../../models/Chore"
+import { GoodDeed } from "../../models/GoodDeed"
 
 export function ChoresTab() {
-    const [toasts, setToasts] = useState<Toast[]>([])
-    const [choreData, setChoreData] = useState<Omit<Chore, 'id' | 'completedCount'>>({
+    const [chores, setChores] = useState<Chore[]>([])
+    const [choreData, setChoreData] = useState({
         description: '',
         frequency: 1,
         savingAmount: 0
     })
-
-    const [chores, setChores] = useState<Chore[]>([])
     const [goodDeed, setGoodDeed] = useState<GoodDeed>({
         stamps: 0,
-        maxStamps: 10,
+        maxStamps: 10
     })
-
     const { addSaving } = useSavings()
+    const { addToast } = useToast()
 
     const handleAddSaving = (chore: Chore) => {
         const today = new Date()
@@ -103,14 +84,6 @@ export function ChoresTab() {
         }))
     }
 
-    const addToast = (message: string, type: 'success' | 'error' = 'success') => {
-        const id = crypto.randomUUID()
-        setToasts(prev => [...prev, { id, message, type }])
-        setTimeout(() => {
-            setToasts(prev => prev.filter(toast => toast.id !== id))
-        }, 3000)
-    }
-
     const handleDeleteChore = (choreId: string) => {
         setChores(prev => prev.filter(chore => chore.id !== choreId))
         addToast('Chore deleted successfully')
@@ -123,25 +96,6 @@ export function ChoresTab() {
 
     return (
         <div className="space-y-6">
-            {/* Toast Container */}
-            <div className="fixed bottom-4 right-4 z-[9999]">
-                {toasts.map(toast => (
-                    <div
-                        key={toast.id}
-                        className="flex items-center space-x-2 px-6 py-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 mb-2 slide-in"
-                    >
-                        <div className="flex items-center space-x-3">
-                            <div className="p-1 bg-green-100 dark:bg-green-900/50 rounded-full">
-                                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                            </div>
-                            <p className="text-base font-medium text-gray-900 dark:text-white">
-                                {toast.message}
-                            </p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50">
                     <div className="flex items-center space-x-3">
@@ -387,21 +341,6 @@ export function ChoresTab() {
                     </div>
                 )}
             </div>
-            <style>{`
-                @keyframes slide-in {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                .slide-in {
-                    animation: slide-in 0.3s ease-out forwards;
-                }
-            `}</style>
         </div>
     )
 }

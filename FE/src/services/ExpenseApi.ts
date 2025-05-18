@@ -1,20 +1,15 @@
 import { Expense } from '../models/Expense'; // Adjust path
 import { Transaction } from '../models/Transaction'; // Adjust path
 import { CreateExpense } from './CreateExpense';
+import { apiClient } from './ApiClient';
 
 export const fetchExpenses = async (): Promise<Expense[]> => {
-  const token = localStorage.getItem('authToken');
-  const response = await fetch(import.meta.env.VITE_API_URL + "/transactions", {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const result = await response.json();
-  const data: Transaction[] = result.transactions;
+  const response = await apiClient.get<{ transactions: Transaction[] }>('/transactions');
+
+  if (response.error) throw new Error(response.error);
+  if (!response.data) throw new Error('No data received');
+
+  const data: Transaction[] = response.data.transactions;
   const transformedExpenses: Expense[] = data
     .filter((transaction) => transaction.amount > 0)
     .map((transaction) => ({
@@ -29,52 +24,27 @@ export const fetchExpenses = async (): Promise<Expense[]> => {
 };
 
 export const deleteExpense = async (id: string): Promise<void> => {
-  const token = localStorage.getItem('authToken');
-  const response = await fetch(import.meta.env.VITE_API_URL + "/transactions" + `/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+  const response = await apiClient.delete(`/transactions/${id}`);
+  if (response.error) throw new Error(response.error);
 };
 
 export const getExpenseById = async (id: string): Promise<Transaction> => {
-  const token = localStorage.getItem('authToken');
-  const response = await fetch(import.meta.env.VITE_API_URL + "/transactions" + `/${id}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return await response.json();
+  const response = await apiClient.get<Transaction>(`/transactions/${id}`);
+  if (response.error) throw new Error(response.error);
+  if (!response.data) throw new Error('No data received');
+  return response.data;
 };
 
 export const updateExpense = async (id: string, updatedExpense: Transaction): Promise<Transaction> => {
-  const token = localStorage.getItem('authToken');
-  const response = await fetch(import.meta.env.VITE_API_URL + "/transactions" + `/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(updatedExpense),
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return await response.json();
+  const response = await apiClient.put<Transaction>(`/transactions/${id}`, updatedExpense);
+  if (response.error) throw new Error(response.error);
+  if (!response.data) throw new Error('No data received');
+  return response.data;
 };
 
 export const addExpense = async (newExpense: CreateExpense): Promise<Expense | null> => {
   try {
-    var today = new Date();
+    const today = new Date();
     // Transform the frontend Expense structure to DetailedTransaction for the backend
     const detailedTransaction: Transaction = {
       id: undefined, // Let the backend handle ID generation
@@ -83,30 +53,20 @@ export const addExpense = async (newExpense: CreateExpense): Promise<Expense | n
       amount: newExpense.amount,
       category: newExpense.category ? { id: undefined, name: newExpense.category } : undefined,
     };
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(import.meta.env.VITE_API_URL + "/transactions", {
-      // Using the upsert endpoint
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify([detailedTransaction]), // Send as a single-element array
-    });
 
-    if (response.ok) {
-      const updatedTransactions: Transaction[] = await response.json();
-      return {
-        id: updatedTransactions[0].id!,
-        date: new Date(updatedTransactions[0].transactionDate),
-        description: updatedTransactions[0].description,
-        amount: updatedTransactions[0].amount,
-        category: updatedTransactions[0].category?.name || '',
-      };
-    } else {
-      console.error('API Error adding expense:', response.status);
-      return null;
-    }
+    const response = await apiClient.post<Transaction[]>('/transactions', [detailedTransaction]);
+
+    if (response.error) throw new Error(response.error);
+    if (!response.data) throw new Error('No data received');
+
+    const updatedTransactions = response.data;
+    return {
+      id: updatedTransactions[0].id!,
+      date: new Date(updatedTransactions[0].transactionDate),
+      description: updatedTransactions[0].description,
+      amount: updatedTransactions[0].amount,
+      category: updatedTransactions[0].category?.name || '',
+    };
   } catch (error: any) {
     console.error('Error adding expense:', error.message);
     return null;

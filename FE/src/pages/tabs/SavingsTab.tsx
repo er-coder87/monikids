@@ -1,10 +1,10 @@
-import { Calendar, Check, CheckCircle2, DollarSign, Heart, ListChecks, PiggyBank, Trash2 } from "lucide-react"
+import { Calendar, DollarSign, PiggyBank } from "lucide-react"
 import { useState } from "react"
 import DatePicker from "react-datepicker"
 import { EditSavingModal } from "../../components/EditSavingModal"
 import { SavingTable } from "../../components/SavingTable"
-import { Toast } from "../../models/Toast"
 import { useSavings } from "../../contexts/SavingsContext"
+import { useToast } from "../../contexts/ToastContext"
 
 interface PiggyBankTransaction {
     description: string
@@ -28,7 +28,6 @@ interface Saving {
 }
 
 export function SavingsTab({ dateFormat }: SavingsTabProps) {
-    const [toasts, setToasts] = useState<Toast[]>([])
     const [formData, setFormData] = useState<PiggyBankTransaction>({
         description: '',
         amount: 0,
@@ -39,6 +38,7 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
 
     const { savings, totalSavings, addSaving, updateSaving, deleteSaving } = useSavings()
     const [editingSaving, setEditingSaving] = useState<Saving | null>(null)
+    const { addToast } = useToast()
 
     const handleSavingSubmit = async (transaction: PiggyBankTransaction) => {
         if (editingSaving) {
@@ -77,40 +77,13 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         }
     }
 
-    const addToast = (message: string, type: 'success' | 'error' = 'success') => {
-        const id = crypto.randomUUID()
-        setToasts(prev => [...prev, { id, message, type }])
-        setTimeout(() => {
-            setToasts(prev => prev.filter(toast => toast.id !== id))
-        }, 3000)
-    }
-
     return (
         <div className="space-y-6">
-            {/* Toast Container */}
-            <div className="fixed bottom-4 right-4 z-[9999]">
-                {toasts.map(toast => (
-                    <div
-                        key={toast.id}
-                        className="flex items-center space-x-2 px-6 py-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 mb-2 slide-in"
-                    >
-                        <div className="flex items-center space-x-3">
-                            <div className="p-1 bg-green-100 dark:bg-green-900/50 rounded-full">
-                                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                            </div>
-                            <p className="text-base font-medium text-gray-900 dark:text-white">
-                                {toast.message}
-                            </p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                            <PiggyBank className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                            <PiggyBank className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
                             <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Savings</h2>

@@ -7,7 +7,7 @@ import UnauthorizedPage from './pages/UnauthorizedPage';
 import SignUp from './pages/SignUp';
 import LearnMore from './pages/LearnMore';
 import { NavBar } from './components/NavBar';
-import { useUser } from './contexts/UserContext';
+import { useUser, UserProvider } from './contexts/UserContext';
 import { TimePeriodProvider } from './contexts/TimePeriodContext';
 
 function Home() {
@@ -115,18 +115,20 @@ function Home() {
 
 function App() {
   return (
-    <TimePeriodProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/learn-more" element={<LearnMore />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        </Routes>
-      </Router>
-    </TimePeriodProvider>
+    <UserProvider>
+      <TimePeriodProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/learn-more" element={<LearnMore />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          </Routes>
+        </Router>
+      </TimePeriodProvider>
+    </UserProvider>
   );
 }
 
