@@ -11,16 +11,14 @@ export function PiggyBankTab() {
     const pinkFill = "#FFB6C1"; // Light pink
     const darkPinkStroke = "#FF69B4"; // Hot pink
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col items-center justify-center sm:p-6">
             <div
-                className={`relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 cursor-pointer transition-transform duration-1000 transform-style-3d perspective-1000 ${isFlipped ? 'rotate-y-180' : ''
-                    }`}
+                className={`relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 cursor-pointer transition-transform duration-1000 transform-style-3d perspective-1000 ${isFlipped ? 'rotate-y-180' : 'hover:scale-105'}`}
                 onClick={handleClick}
             >
                 {/* Front of piggy bank */}
                 <div
-                    className={`absolute w-full h-full backface-hidden ${isFlipped ? 'hidden' : 'block'
-                        }`}
+                    className={`absolute w-full h-full backface-hidden ${isFlipped ? 'hidden' : 'block'}`}
                 >
                     <div className="w-full h-full flex items-center justify-center">
                         <svg
@@ -30,7 +28,7 @@ export function PiggyBankTab() {
                             height="100%"
                             viewBox="0 0 512.000000 512.000000"
                             preserveAspectRatio="xMidYMid meet"
-                            className="max-w-[90%] max-h-[90%] sm:max-w-[85%] sm:max-h-[85%] md:max-w-[80%] md:max-h-[80%]"
+                            className="transform scale-200 origin-center"
                         >
                             <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)">
                                 <path
@@ -156,18 +154,17 @@ m-336 23 c-3 -3 -12 -4 -19 -1 -8 3 -5 6 6 6 11 1 17 -2 13 -5z m263 -74 c18
 
                 {/* Back of piggy bank (showing savings) */}
                 <div
-                    className={`absolute w-full h-full backface-hidden rotate-y-180 ${isFlipped ? 'block' : 'hidden'
-                        }`}
+                    className={`absolute w-full h-full backface-hidden rotate-y-180 ${isFlipped ? 'block' : 'hidden'}`}
                 >
-                    <div className="w-full h-full bg-pink-100 rounded-full flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-4 border-pink-300">
-                        <h2 className="text-xl sm:text-2xl font-bold text-pink-600 mb-2">Total Savings</h2>
-                        <p className="text-3xl sm:text-4xl font-bold text-pink-700">${totalSavings.toFixed(2)}</p>
-                        <p className="text-xs sm:text-sm text-pink-500 mt-2">Click to flip back</p>
+                    <div className="w-full h-full bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900 dark:to-pink-800 rounded-full flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-4 border-pink-300 dark:border-pink-600 shadow-lg">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 dark:text-pink-300 mb-3">Total Savings</h2>
+                        <p className="text-4xl sm:text-5xl font-bold text-pink-700 dark:text-pink-200">${totalSavings.toFixed(2)}</p>
+                        <p className="text-sm sm:text-base text-pink-500 dark:text-pink-400 mt-4">Click to flip back</p>
                     </div>
                 </div>
             </div>
 
-            <p className="mt-6 sm:mt-8 text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center">
+            <p className="mt-8 sm:mt-10 text-base sm:text-lg text-gray-600 dark:text-gray-400 text-center max-w-md">
                 Click the piggy bank to see your savings!
             </p>
 
@@ -185,7 +182,7 @@ m-336 23 c-3 -3 -12 -4 -19 -1 -8 3 -5 6 6 6 11 1 17 -2 13 -5z m263 -74 c18
             .rotate-y-180 {
               transform: rotateY(180deg);
             }
-          `}
+            `}
             </style>
         </div>
     );
