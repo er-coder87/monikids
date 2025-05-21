@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSavings } from "../../contexts/SavingsContext";
+import { useToast } from "../../contexts/ToastContext";
 
 export function PiggyBankTab() {
     const [isFlipped, setIsFlipped] = useState(false);
-    const { totalSavings } = useSavings();
+    const { totalSavings, refetch } = useSavings();
+    const { addToast } = useToast();
+
+    useEffect(() => {
+        refetch().catch(error => {
+            console.error('Error fetching savings:', error)
+            addToast('Failed to fetch savings', 'error')
+        })
+    }, [refetch, addToast])
 
     const handleClick = () => {
         setIsFlipped(!isFlipped);

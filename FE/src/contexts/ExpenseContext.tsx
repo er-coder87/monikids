@@ -2,6 +2,15 @@ import { createContext, useContext, useState, ReactNode } from 'react'
 import { Expense } from '../models/Expense'
 import { useToast } from './ToastContext'
 import { apiClient } from '../services/ApiClient'
+import type { ApiTransaction, ApiResponse } from '../types/api'
+
+const transformApiTransaction = (transaction: ApiTransaction): Expense => ({
+    id: transaction.id.toString(),
+    date: new Date(transaction.transactionDate),
+    amount: transaction.amount,
+    description: transaction.description,
+    category: transaction.category || undefined
+})
 
 interface ExpenseContextType {
     expenses: Expense[]
@@ -21,11 +30,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const addExpense = async (expense: Omit<Expense, 'id'>) => {
         try {
-            const response = await apiClient.post<Expense>('/expenses', expense)
+            console.log('Sending expense data:', JSON.stringify(expense, null, 2))
+            const response = await apiClient.post<ApiResponse>('/transactions', expense)
+            console.log('API Response:', response)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
 
-            const newExpense = response.data
+            const newExpense = transformApiTransaction(response.data.transaction)
             setExpenses(prev => [...prev, newExpense])
             setTotalExpenses(prev => prev + expense.amount)
             addToast(`Added expense: ${expense.description}`)
@@ -38,11 +49,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const updateExpense = async (updatedExpense: Expense) => {
         try {
-            const response = await apiClient.put<Expense>(`/expenses/${updatedExpense.id}`, updatedExpense)
+            const response = await apiClient.put<ApiResponse>(`/transactions/${updatedExpense.id}`, updatedExpense)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
 
-            const updatedData = response.data
+            const updatedData = transformApiTransaction(response.data.transaction)
             setExpenses(prev => prev.map(expense =>
                 expense.id === updatedExpense.id ? updatedData : expense
             ))
@@ -59,7 +70,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const deleteExpense = async (id: string) => {
         try {
-            const response = await apiClient.delete(`/expenses/${id}`)
+            const response = await apiClient.delete(`/transactions/${id}`)
             if (response.error) throw new Error(response.error)
 
             const expense = expenses.find(e => e.id === id)
@@ -77,11 +88,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const refetch = async () => {
         try {
-            const response = await apiClient.get<Expense[]>('/expenses')
+            const response = await apiClient.get<{ message: string, transactions: ApiTransaction[] }>('/transactions')
             if (response.error) throw new Error(response.error)
-            if (!response.data) throw new Error('No data received')
+            if (!response.data?.transactions) throw new Error('No data received')
 
-            const expensesData = response.data
+            const expensesData = response.data.transactions
+                .map(transformApiTransaction)
             setExpenses(expensesData)
             setTotalExpenses(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
         } catch (error) {

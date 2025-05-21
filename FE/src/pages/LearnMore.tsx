@@ -30,11 +30,11 @@ export default function LearnMore() {
 
     const faqs = [
         {
-            question: "Is Monikids suitable for my child's age?",
-            answer: "Monikids is designed for children ages 5-15, with features that grow with your child. Parents can customize the experience based on their child's age and understanding."
+            question: "Is DigiPig suitable for my child's age?",
+            answer: "DigiPig is designed for children ages 5-15, with features that grow with your child. Parents can customize the experience based on their child's age and understanding."
         },
         {
-            question: "How does Monikids help teach financial literacy?",
+            question: "How does DigiPig help teach financial literacy?",
             answer: "Through interactive features like the digital piggybank, chore rewards, and savings goals, children learn practical money management skills in a safe, controlled environment."
         },
         {
@@ -58,7 +58,7 @@ export default function LearnMore() {
                         Teach Your Kids Smart Money Habits
                     </h1>
                     <p className="text-xl text-gray-600 leading-relaxed">
-                        Discover how Monikids helps parents teach their children about money through fun, interactive tools.
+                        Discover how DigiPig helps parents teach their children about money through fun, interactive tools.
                         Build a strong foundation for financial literacy that will last a lifetime.
                     </p>
                 </div>
@@ -79,7 +79,7 @@ export default function LearnMore() {
                     <div className="max-w-3xl mx-auto text-center">
                         <h2 className="text-3xl font-bold mb-6">Start Your Child's Financial Journey</h2>
                         <p className="text-lg text-indigo-100 mb-8">
-                            Join families who trust Monikids to teach their children about money in a fun and safe way.
+                            Join families who trust DigiPig to teach their children about money in a fun and safe way.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button

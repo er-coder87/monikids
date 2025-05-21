@@ -31,7 +31,7 @@ export const NavBar = () => {
             <div className="container mx-auto px-4 py-4">
                 <div className="flex justify-between items-center">
                     <h1 onClick={() => navigate('/')} className="text-2xl font-bold text-indigo-600 cursor-pointer">
-                        MoniKids
+                        DigiPig
                     </h1>
                     <div className="flex gap-4 items-center">
                         {isAuthenticated ? (

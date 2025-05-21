@@ -246,8 +246,6 @@ const Dashboard = () => {
             {activeTab === 'savings' && <SavingsTab dateFormat={dateFormat} />}
             {activeTab === 'expenses' && (
               <ExpensesTab
-                fetchedExpenses={fetchedExpenses}
-                refetch={refetch}
                 dateFormat={dateFormat}
                 selectedPeriod={selectedPeriod}
                 currentMonth={currentMonth}

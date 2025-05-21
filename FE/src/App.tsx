@@ -61,13 +61,13 @@ function Home() {
             See How It Works
           </h2>
           <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-            Watch our quick demo to see how Monikids helps you teach financial literacy to your children through fun and interactive piggybank management.
+            Watch our quick demo to see how DigiPig helps you teach financial literacy to your children through fun and interactive piggybank management.
           </p>
           <div className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl">
             <div className="aspect-w-16 aspect-h-9">
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/d9mWh03Z0SA"
+                src=""
                 title="Product Demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

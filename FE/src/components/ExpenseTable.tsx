@@ -21,15 +21,13 @@ interface SortableHeaderProps {
 }
 
 const SortableHeader: React.FC<SortableHeaderProps> = ({ field, children, onSort, currentSort }) => (
-  <th
-    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+  <div
+    className="flex items-center space-x-1 cursor-pointer"
     onClick={() => onSort(field)}
   >
-    <div className="flex items-center space-x-1">
-      <span>{children}</span>
-      <ArrowUpDown className={`h-4 w-4 ${currentSort.field === field ? 'text-blue-500' : 'text-gray-400'}`} />
-    </div>
-  </th>
+    <span>{children}</span>
+    <ArrowUpDown className={`h-4 w-4 ${currentSort.field === field ? 'text-blue-500' : 'text-gray-400'}`} />
+  </div>
 );
 
 interface ExpenseTableProps {
@@ -66,7 +64,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
       case 'description':
         return a.description.localeCompare(b.description) * direction;
       case 'category':
-        return a.category.localeCompare(b.category) * direction;
+        return ((a.category || '') || '').localeCompare((b.category || '') || '') * direction;
       case 'amount':
         return (a.amount - b.amount) * direction;
       default:

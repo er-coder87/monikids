@@ -25,12 +25,24 @@ export function ExpensesTab({
     currentMonth
 }: ExpensesTabProps) {
     const [expenses, setExpenses] = useState<Expense[]>([])
-    const [amountAtTimeChartData, setAmountAtTimeChartData] = useState(getAmountAtTimeData(expenses))
-    const [accumulatedAmountChartData, setAccumulatedAmountChartData] = useState(getAccumulatedAmountData(expenses))
     const [categories, setCategories] = useState<Category[]>([])
-    const { expenses: allExpenses, addExpense, updateExpense, deleteExpense } = useExpenses()
+    const { expenses: allExpenses, addExpense, updateExpense, deleteExpense, refetch } = useExpenses()
     const { addToast } = useToast()
 
+    // Initial fetch
+    useEffect(() => {
+        const fetchExpenses = async () => {
+            try {
+                await refetch()
+            } catch (error) {
+                console.error('Error fetching expenses:', error)
+                addToast('Failed to fetch expenses', 'error')
+            }
+        }
+        fetchExpenses()
+    }, []) // Empty dependency array for initial fetch only
+
+    // Filter expenses based on selected period
     useEffect(() => {
         let filteredExpenses = [...allExpenses]
 
@@ -57,11 +69,6 @@ export function ExpensesTab({
         }
         setExpenses(filteredExpenses)
     }, [allExpenses, selectedPeriod, currentMonth])
-
-    useEffect(() => {
-        setAmountAtTimeChartData(getAmountAtTimeData(expenses))
-        setAccumulatedAmountChartData(getAccumulatedAmountData(expenses))
-    }, [expenses])
 
     const handleAddExpense = async (newExpenseData: CreateExpense) => {
         try {
@@ -99,22 +106,6 @@ export function ExpensesTab({
         }
     }
 
-    const handleExpensesUploaded = async (newExpenses: Expense[]) => {
-        try {
-            for (const expense of newExpenses) {
-                await addExpense({
-                    description: expense.description,
-                    amount: expense.amount,
-                    category: expense.category,
-                    date: expense.date
-                })
-            }
-        } catch (error: any) {
-            console.error('Error uploading expenses:', error.message)
-            addToast('Failed to upload expenses', 'error')
-        }
-    }
-
     const handleCategoryCreated = (category: Category) => {
         setCategories(prev => [...prev, category])
     }
@@ -127,48 +118,29 @@ export function ExpensesTab({
                 <TimePeriodSelector dateFormat={dateFormat} />
             </div>
 
-            <div className='flex justify-start'>
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-fit">
-                    <div className="flex items-center">
-                        <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+            <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-full">
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                             <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </div>
-                        <div className="ml-3">
-                            <div className="flex items-center space-x-2">
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Expenses</p>
-                                <span className="text-xs text-gray-400 dark:text-gray-500">
-                                    ({expenses.length} {expenses.length === 1 ? 'expense' : 'expenses'})
-                                </span>
-                            </div>
-                            <p className="text-xl font-semibold text-gray-900 dark:text-white">${totalExpenses.toFixed(2)}</p>
+                        <div>
+                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Expenses</h2>
+                            <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                                ${totalExpenses.toFixed(2)}
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* --- Charts --- */}
-                <div className="lg:col-span-2 flex flex-col space-y-4">
-                    <ExpenseTrendChart
-                        amountAtTimeChartData={amountAtTimeChartData}
-                        accumulatedAmountChartData={accumulatedAmountChartData}
-                        dateFormat={dateFormat}
-                        selectedPeriod={selectedPeriod}
-                        currentMonth={currentMonth}
-                    />
-                    <ExpenseCategoryChart
-                        expenses={expenses}
-                    />
-                </div>
-
-                {/* --- Forms and Upload --- */}
-                <div className="space-y-4">
-                    <AddExpenseForm onAddExpense={handleAddExpense} />
-                    <CategoryManager
-                        onCategoryCreated={handleCategoryCreated}
-                        existingCategories={categories}
-                    />
-                </div>
+            {/* --- Forms and Upload --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <AddExpenseForm onAddExpense={handleAddExpense} />
+                <CategoryManager
+                    onCategoryCreated={handleCategoryCreated}
+                    existingCategories={categories}
+                />
             </div>
 
             {/* --- Expense Table --- */}

@@ -16,6 +16,7 @@ export function ChoresTab() {
         stamps: 0,
         maxStamps: 10
     })
+    const [hasStampChanges, setHasStampChanges] = useState(false)
     const { addSaving } = useSavings()
     const { addToast } = useToast()
 
@@ -74,6 +75,32 @@ export function ChoresTab() {
             ...prev,
             stamps: Math.min(newCount, prev.maxStamps),
         }))
+        setHasStampChanges(true)
+    }
+
+    const handleSubmitGoodDeed = () => {
+        if (goodDeed.stamps === goodDeed.maxStamps) {
+            const today = new Date()
+            const formattedDate = today.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            })
+
+            addSaving({
+                description: `Completed ${goodDeed.maxStamps} good deeds on ${formattedDate}`,
+                amount: goodDeed.maxStamps * 2, // $2 per good deed
+                date: today,
+                isRecurring: false,
+            })
+
+            setGoodDeed(prev => ({
+                ...prev,
+                stamps: 0
+            }))
+
+            addToast(`Added saving $${goodDeed.maxStamps * 2} for completing ${goodDeed.maxStamps} good deeds!`)
+        }
     }
 
     const handleMaxStampsChange = (value: number) => {
@@ -82,6 +109,12 @@ export function ChoresTab() {
             maxStamps: value,
             stamps: Math.min(prev.stamps, value)
         }))
+        setHasStampChanges(true)
+    }
+
+    const handleSaveStampChanges = () => {
+        addToast('Stamp configuration saved')
+        setHasStampChanges(false)
     }
 
     const handleDeleteChore = (choreId: string) => {
@@ -140,7 +173,7 @@ export function ChoresTab() {
                             id="maxStamps"
                             value={goodDeed.maxStamps}
                             onChange={(e) => handleMaxStampsChange(Number(e.target.value))}
-                            className="ml-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         >
                             {[10, 15, 20, 25, 30].map(value => (
                                 <option key={value} value={value}>{value}</option>
@@ -185,6 +218,20 @@ export function ChoresTab() {
                                     </button>
                                 );
                             })}
+                        </div>
+                        <div className="w-full flex flex-col space-y-4">
+                            <div className="flex">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveStampChanges}
+                                    disabled={!hasStampChanges}
+                                    className="w-full md:w-1/4 py-2 px-4 rounded-md text-sm font-medium transition-colors
+                                        bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600"
+                                >
+                                    Save
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

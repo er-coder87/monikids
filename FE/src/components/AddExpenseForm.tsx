@@ -12,7 +12,7 @@ const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onAddExpense }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newExpense.description || !newExpense.amount || !newExpense.category) return;
+    if (!newExpense.description || !newExpense.amount) return;
     onAddExpense({
       description: newExpense.description,
       amount: parseFloat(newExpense.amount),

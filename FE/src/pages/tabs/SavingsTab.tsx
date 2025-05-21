@@ -1,10 +1,11 @@
 import { Calendar, DollarSign, PiggyBank } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DatePicker from "react-datepicker"
 import { EditSavingModal } from "../../components/EditSavingModal"
 import { SavingTable } from "../../components/SavingTable"
 import { useSavings } from "../../contexts/SavingsContext"
 import { useToast } from "../../contexts/ToastContext"
+import { TimePeriodSelector } from "../../components/TimePeriodSelector"
 
 interface PiggyBankTransaction {
     description: string
@@ -36,50 +37,78 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         recurringFrequency: 'monthly'
     })
 
-    const { savings, totalSavings, addSaving, updateSaving, deleteSaving } = useSavings()
+    const { savings, totalSavings, addSaving, updateSaving, deleteSaving, refetch } = useSavings()
     const [editingSaving, setEditingSaving] = useState<Saving | null>(null)
     const { addToast } = useToast()
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        const loadSavings = async () => {
+            try {
+                await refetch()
+            } catch (error) {
+                console.error('Error loading savings:', error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        loadSavings()
+    }, [])
 
     const handleSavingSubmit = async (transaction: PiggyBankTransaction) => {
-        if (editingSaving) {
-            updateSaving({ ...transaction, id: editingSaving.id })
-            setEditingSaving(null)
-        } else {
-            addSaving(transaction)
+        try {
+            if (editingSaving) {
+                await updateSaving({ ...transaction, id: editingSaving.id })
+                setEditingSaving(null)
+            } else {
+                await addSaving(transaction)
+            }
+
+            setFormData({
+                description: '',
+                amount: 0,
+                date: new Date(),
+                isRecurring: false,
+                recurringFrequency: 'monthly'
+            })
+        } catch (error) {
+            console.error('Error saving transaction:', error)
         }
-
-        setFormData({
-            description: '',
-            amount: 0,
-            date: new Date(),
-            isRecurring: false,
-            recurringFrequency: 'monthly'
-        })
-
-        addToast(`Added $${transaction.amount.toFixed(2)} for ${transaction.description}`)
     }
 
     const handleEditSaving = (saving: Saving) => {
         setEditingSaving(saving)
     }
 
-    const handleSaveSaving = (updatedSaving: Saving) => {
-        updateSaving(updatedSaving)
-        setEditingSaving(null)
-        addToast(`Updated saving: ${updatedSaving.description}`)
-    }
-
-    const handleDeleteSaving = (id: string) => {
-        const saving = savings.find(a => a.id === id)
-        if (saving) {
-            deleteSaving(id)
-            addToast(`Deleted saving: ${saving.description}`)
+    const handleSaveSaving = async (updatedSaving: Saving) => {
+        try {
+            await updateSaving(updatedSaving)
+            setEditingSaving(null)
+        } catch (error) {
+            console.error('Error updating saving:', error)
         }
     }
 
+    const handleDeleteSaving = async (id: string) => {
+        try {
+            await deleteSaving(id)
+        } catch (error) {
+            console.error('Error deleting saving:', error)
+        }
+    }
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+    }
+
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-col space-y-4">
+            <div className='flex justify-start'>
+                <TimePeriodSelector dateFormat={dateFormat} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
@@ -95,114 +124,104 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2" />
-                    Add Saving
-                </h2>
-
-                <form onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSavingSubmit(formData)
-                }} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="w-full md:w-1/2">
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Description
-                            </label>
-                            <input
-                                type="text"
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                required
-                            />
-                        </div>
-
-                        <div className="w-full md:w-1/2">
-                            <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Date
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Calendar className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <DatePicker
-                                    selected={formData.date}
-                                    onChange={(date: Date | null) => date && setFormData(prev => ({ ...prev, date }))}
-                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                    dateFormat={dateFormat}
-                                    required
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="w-full md:w-1/2">
-                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Amount
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <DollarSign className="h-5 w-5 text-gray-400" />
-                                </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+                <div className="p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New Saving</h2>
+                    <form onSubmit={(e) => {
+                        e.preventDefault()
+                        handleSavingSubmit(formData)
+                    }} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Description
+                                </label>
                                 <input
-                                    type="number"
-                                    id="amount"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
-                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    type="text"
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 px-3 py-2"
                                     required
-                                    min="0"
-                                    step="0.01"
                                 />
                             </div>
-                        </div>
-
-                        <div className="w-full md:w-1/2">
-                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Is recurring?
-                            </label>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-2">
+                            <div>
+                                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Amount
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <DollarSign className="h-5 w-5 text-gray-400" />
+                                    </div>
                                     <input
-                                        type="checkbox"
-                                        id="isRecurring"
-                                        checked={formData.isRecurring}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, isRecurring: e.target.checked }))}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        type="number"
+                                        id="amount"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
+                                        className="block w-full pl-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 px-3 py-2"
+                                        step="0.01"
+                                        min="0"
+                                        required
                                     />
-                                    <label htmlFor="isRecurring" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Recurring
-                                    </label>
                                 </div>
-                                <select
-                                    id="recurringFrequency"
-                                    value={formData.recurringFrequency}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, recurringFrequency: e.target.value as PiggyBankTransaction['recurringFrequency'] }))}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                    disabled={!formData.isRecurring}
-                                >
-                                    <option value="daily">Daily</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="flex">
-                        <button
-                            type="submit"
-                            className="w-full md:w-1/4 py-2 px-4 rounded-md text-sm font-medium transition-colors
-                                bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Add
-                        </button>
-                    </div>
-                </form>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Date
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Calendar className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <DatePicker
+                                        selected={formData.date}
+                                        onChange={(date: Date | null) => date && setFormData(prev => ({ ...prev, date }))}
+                                        dateFormat={dateFormat}
+                                        className="block w-full pl-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 px-3 py-2"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Recurring
+                                </label>
+                                <div className="mt-1 flex items-center space-x-4">
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isRecurring}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, isRecurring: e.target.checked }))}
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600"
+                                        />
+                                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Recurring</span>
+                                    </label>
+                                    {formData.isRecurring && (
+                                        <select
+                                            value={formData.recurringFrequency}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, recurringFrequency: e.target.value as 'daily' | 'weekly' | 'monthly' }))}
+                                            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 px-3 py-2"
+                                        >
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {editingSaving ? 'Update Saving' : 'Add Saving'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <SavingTable
@@ -218,22 +237,6 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
                     onSave={handleSaveSaving}
                 />
             )}
-
-            <style>{`
-                @keyframes slide-in {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-                .slide-in {
-                    animation: slide-in 0.3s ease-out forwards;
-                }
-            `}</style>
         </div>
     )
 }
