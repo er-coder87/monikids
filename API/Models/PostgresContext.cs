@@ -19,6 +19,10 @@ public partial class PostgresContext : DbContext
 
     public virtual DbSet<Category> Categories { get; set; }
 
+    public virtual DbSet<Chore> Chores { get; set; }
+
+    public virtual DbSet<GoodDeed> GoodDeeds { get; set; }
+
     public virtual DbSet<Transaction> Transactions { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -91,6 +95,45 @@ public partial class PostgresContext : DbContext
                 .HasConstraintName("Categories_userId_fkey");
         });
 
+        modelBuilder.Entity<Chore>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Chores_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AllowanceAmount).HasColumnName("allowance_amount");
+            entity.Property(e => e.CompletedAt).HasColumnName("completed_at");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CurrentCount).HasColumnName("current_count");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.MaxCount).HasColumnName("max_count");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Chores)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Chores_user_id_fkey");
+        });
+
+        modelBuilder.Entity<GoodDeed>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("GoodDeeds_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CurrentCount).HasColumnName("current_count");
+            entity.Property(e => e.MaxCount).HasColumnName("max_count");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.GoodDeeds)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("GoodDeeds_user_id_fkey");
+        });
+
         modelBuilder.Entity<Transaction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Transactions_pkey");
@@ -102,7 +145,7 @@ public partial class PostgresContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.TransactionDate).HasColumnName("transactionDate");
+            entity.Property(e => e.Date).HasColumnName("transactionDate");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Transactions)

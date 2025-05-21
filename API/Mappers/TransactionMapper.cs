@@ -16,7 +16,7 @@ public static class TransactionMapper
             Id = transaction.Id,
             Description = transaction.Description,
             Amount = transaction.Amount,
-            TransactionDate = transaction.TransactionDate,
+            TransactionDate = transaction.Date,
             Category = transaction.Category != null ? CategoryMapper.ToDto(transaction.Category) : null,
         };
     }

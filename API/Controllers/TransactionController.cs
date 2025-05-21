@@ -54,30 +54,36 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     }
 
     [HttpPost]
-    public async Task<ActionResult<IEnumerable<TransactionDto>>> UpsertTransactions([FromBody] IEnumerable<CreateTransactionRequest> request)
+    public async Task<ActionResult<TransactionDto>> AddTransaction([FromBody] CreateTransactionRequest request)
     {
         try
         {
             var userId = User.GetUserId();
-            var transactions = request.Select(a => new Transaction
+        
+            var transaction = new Transaction
             {
                 UserId = userId,
-                TransactionDate = DateOnly.FromDateTime(a.TransactionDate),
-                Description = a.Description,
-                Amount = a.Amount,
-            }).ToList();
-            
-            var updatedTransactions = await transactionRepository.UpsertTransactionsAsync(userId, transactions);
-            var transactionDtos = TransactionMapper.ToDtoList(updatedTransactions);
-            return Ok(transactionDtos);
+                Date = DateOnly.FromDateTime(request.Date),
+                Description = request.Description,
+                Amount = request.Amount,
+            };
+        
+            var createdTransaction = await transactionRepository.AddTransactionAsync(userId, transaction);
+            var transactionDto = TransactionMapper.ToDto(createdTransaction);
+        
+            return CreatedAtAction(
+                nameof(GetTransactionById), 
+                new { id = transactionDto.Id }, 
+                new { Message = "Transaction created successfully", Transaction = transactionDto }
+            );
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating the transaction");
-            return StatusCode(500, "An error occurred while updating the transaction");
+            logger.LogError(ex, "Error creating the transaction");
+            return StatusCode(500, "An error occurred while creating the transaction");
         }
     }
-    
+
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> DeleteTransaction(long id)
     {

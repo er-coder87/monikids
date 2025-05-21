@@ -19,5 +19,9 @@ public partial class User
 
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
 
+    public virtual ICollection<Chore> Chores { get; set; } = new List<Chore>();
+
+    public virtual ICollection<GoodDeed> GoodDeeds { get; set; } = new List<GoodDeed>();
+
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

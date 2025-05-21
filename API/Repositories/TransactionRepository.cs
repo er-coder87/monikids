@@ -6,6 +6,7 @@ namespace ExpenseTrackerApi.Repositories;
 
 public interface ITransactionRepository
 {
+    Task<Transaction> AddTransactionAsync(long userId, Transaction transaction);
     Task<IEnumerable<Transaction>> UpsertTransactionsAsync(long userId, IEnumerable<Transaction> transactions);
     Task<IEnumerable<Transaction>> GetTransactionsAsync(long userId, TransactionFilter? filter = null);
     Task<Transaction?> GetTransactionByIdAsync(long userId, long id);
@@ -15,6 +16,17 @@ public interface ITransactionRepository
 
 public class TransactionRepository(PostgresContext postgresContext) : ITransactionRepository
 {
+    public async Task<Transaction> AddTransactionAsync(long userId, Transaction transaction)
+    {
+        transaction.UserId = userId; // Ensure correct user ID
+        transaction.CreatedAt = DateTime.UtcNow;
+    
+        postgresContext.Transactions.Add(transaction);
+        await postgresContext.SaveChangesAsync();
+    
+        return transaction;
+    }
+
     public async Task<IEnumerable<Transaction>> UpsertTransactionsAsync(long userId,
         IEnumerable<Transaction> transactions)
     {
@@ -32,7 +44,7 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
             incomingTransaction.UserId = userId;
 
             var existingTransaction = existingTransactions.FirstOrDefault(et =>
-                et.TransactionDate == incomingTransaction.TransactionDate &&
+                et.Date == incomingTransaction.Date &&
                 et.Description == incomingTransaction.Description &&
                 et.Amount == incomingTransaction.Amount);
 
@@ -74,12 +86,12 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
         {
             if (filter.StartDate.HasValue)
             {
-                query = query.Where(t => t.TransactionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+                query = query.Where(t => t.Date >= DateOnly.FromDateTime(filter.StartDate.Value));
             }
 
             if (filter.EndDate.HasValue)
             {
-                query = query.Where(t => t.TransactionDate <= DateOnly.FromDateTime(filter.EndDate.Value.Date.AddDays(1)));
+                query = query.Where(t => t.Date <= DateOnly.FromDateTime(filter.EndDate.Value.Date.AddDays(1)));
             }
         }
 
