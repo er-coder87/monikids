@@ -63,7 +63,7 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
             var transaction = new Transaction
             {
                 UserId = userId,
-                Date = DateOnly.FromDateTime(request.Date),
+                TransactionDate = DateOnly.FromDateTime(request.Date),
                 Description = request.Description,
                 Amount = request.Amount,
             };

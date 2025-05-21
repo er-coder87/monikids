@@ -44,7 +44,7 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
             incomingTransaction.UserId = userId;
 
             var existingTransaction = existingTransactions.FirstOrDefault(et =>
-                et.Date == incomingTransaction.Date &&
+                et.TransactionDate == incomingTransaction.TransactionDate &&
                 et.Description == incomingTransaction.Description &&
                 et.Amount == incomingTransaction.Amount);
 
@@ -86,12 +86,12 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
         {
             if (filter.StartDate.HasValue)
             {
-                query = query.Where(t => t.Date >= DateOnly.FromDateTime(filter.StartDate.Value));
+                query = query.Where(t => t.TransactionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
             }
 
             if (filter.EndDate.HasValue)
             {
-                query = query.Where(t => t.Date <= DateOnly.FromDateTime(filter.EndDate.Value.Date.AddDays(1)));
+                query = query.Where(t => t.TransactionDate <= DateOnly.FromDateTime(filter.EndDate.Value.Date.AddDays(1)));
             }
         }
 
