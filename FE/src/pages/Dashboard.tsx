@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import useDarkMode from '../hooks/useDarkMode';
-import useFetchExpenses from '../hooks/useFetchExpenses';
 import { ExportCsvModal } from '../modals/ExportCsvModal';
 import { ImportCsvModal } from '../modals/ImportCsvModal';
 import { Expense } from '../models/Expense';
@@ -18,14 +17,15 @@ import { SavingsTab } from './tabs/SavingsTab';
 import { ChoresTab } from './tabs/ChoresTab';
 import { SavingsProvider } from '../contexts/SavingsContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useExpenses } from '../contexts/ExpenseContext';
 
 type Tab = 'dashboard' | 'piggy-bank' | 'chores' | 'savings' | 'expenses' | 'budget';
 
 const Dashboard = () => {
   // --- State Variables ---
   const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
-  const { isAuthenticated, isLoading, logout } = useUser();
-  const { fetchedExpenses, refetch } = useFetchExpenses();
+  const { isAuthenticated, isLoading: isAuthLoading, logout } = useUser();
+  const { expenses, refetch } = useExpenses();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTabsOpen, setIsTabsOpen] = useState(false);
@@ -67,6 +67,13 @@ const Dashboard = () => {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
 
+  // Initial fetch when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isAuthLoading) {
+      refetch();
+    }
+  }, [isAuthenticated, isAuthLoading, refetch]);
+
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
   };
@@ -93,7 +100,7 @@ const Dashboard = () => {
   }, [settingsRef, tabsRef]);
 
   // --- JSX ---
-  if (isLoading) {
+  if (isAuthLoading) {
     return <LoadingSpinner />;
   }
 
@@ -240,7 +247,13 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {activeTab === 'dashboard' && <DashboardTab />}
+            {activeTab === 'dashboard' && (
+              <DashboardTab
+                dateFormat={dateFormat}
+                selectedPeriod={selectedPeriod}
+                currentMonth={currentMonth}
+              />
+            )}
             {activeTab === 'piggy-bank' && <PiggyBankTab />}
             {activeTab === 'chores' && <ChoresTab />}
             {activeTab === 'savings' && <SavingsTab dateFormat={dateFormat} />}
@@ -254,7 +267,7 @@ const Dashboard = () => {
             {activeTab === 'budget' && (
               <BudgetTab
                 categories={[]}
-                expenses={[]}
+                expenses={expenses}
                 onEditExpense={async () => { }}
                 onDeleteExpense={async () => { }}
               />
@@ -262,7 +275,7 @@ const Dashboard = () => {
 
             {/* Modals */}
             {isImportModalOpen && <ImportCsvModal onClose={() => setIsImportModalOpen(false)} onExpensesImported={handleExpensesImported} />}
-            {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} expenses={[]} />}
+            {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} expenses={expenses} />}
           </div>
         </div>
       </div>
