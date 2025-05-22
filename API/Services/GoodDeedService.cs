@@ -8,7 +8,7 @@ namespace ExpenseTrackerApi.Services;
 public interface IGoodDeedService
 {
     Task<IEnumerable<GoodDeedDto>> GetGoodDeedsAsync(long userId);
-    Task<GoodDeedDto?> UpdateGoodDeedAsync(long userId, long id, UpdateGoodDeedRequest request);
+    Task<GoodDeedDto?> UpdateGoodDeedAsync(long userId, UpdateGoodDeedRequest request);
 }
 
 public class GoodDeedService(IGoodDeedRepository goodDeedRepository, ILogger<GoodDeedService> logger)
@@ -28,12 +28,12 @@ public class GoodDeedService(IGoodDeedRepository goodDeedRepository, ILogger<Goo
         }
     }
 
-    public async Task<GoodDeedDto?> UpdateGoodDeedAsync(long userId, long id, UpdateGoodDeedRequest request)
+    public async Task<GoodDeedDto?> UpdateGoodDeedAsync(long userId, UpdateGoodDeedRequest request)
     {
         try
         {
             // Get existing good deed
-            var goodDeed = await goodDeedRepository.GetGoodDeedByIdAsync(userId, id);
+            var goodDeed = await goodDeedRepository.GetGoodDeedByIdAsync(userId);
             if (goodDeed == null)
             {
                 return null;
@@ -49,7 +49,7 @@ public class GoodDeedService(IGoodDeedRepository goodDeedRepository, ILogger<Goo
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating good deed {GoodDeedId} for user {UserId}", id, userId);
+            logger.LogError(ex, "Error updating good deed for user {UserId}", userId);
             throw;
         }
     }

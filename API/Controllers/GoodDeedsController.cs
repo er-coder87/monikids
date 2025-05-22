@@ -20,7 +20,7 @@ public class GoodDeedsController(IGoodDeedService goodDeedService, ILogger<GoodD
         {
             var userId = User.GetUserId();
             var goodDeeds = await goodDeedService.GetGoodDeedsAsync(userId);
-            return Ok(new { Message = "Good deeds retrieved successfully", GoodDeeds = goodDeeds });
+            return Ok(new { GoodDeeds = goodDeeds.FirstOrDefault() });
         }
         catch (Exception ex)
         {
@@ -29,20 +29,20 @@ public class GoodDeedsController(IGoodDeedService goodDeedService, ILogger<GoodD
         }
     }
 
-    [HttpPut("{id:long}")]
-    public async Task<ActionResult<GoodDeedDto>> UpdateGoodDeed(long id, [FromBody] UpdateGoodDeedRequest request)
+    [HttpPut()]
+    public async Task<ActionResult<GoodDeedDto>> UpdateGoodDeed([FromBody] UpdateGoodDeedRequest request)
     {
         try
         {
             var userId = User.GetUserId();
-            var goodDeed = await goodDeedService.UpdateGoodDeedAsync(userId, id, request);
+            var goodDeed = await goodDeedService.UpdateGoodDeedAsync(userId, request);
             
             if (goodDeed == null)
             {
                 return NotFound(new { Message = "Good deed not found" });
             }
 
-            return Ok(goodDeed);
+            return Ok(new { GoodDeeds = goodDeed});
         }
         catch (ArgumentException ex)
         {
@@ -50,7 +50,6 @@ public class GoodDeedsController(IGoodDeedService goodDeedService, ILogger<GoodD
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating good deed {GoodDeedId}", id);
             return StatusCode(500, "An error occurred while updating the good deed");
         }
     }

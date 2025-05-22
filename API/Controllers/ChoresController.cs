@@ -21,34 +21,12 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
         {
             var userId = User.GetUserId();
             var chores = await choreService.GetChoresAsync(userId);
-            return Ok(new { Message = "Chores retrieved successfully", Chores = chores });
+            return Ok(chores);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error retrieving chores");
             return StatusCode(500, "An error occurred while retrieving chores");
-        }
-    }
-
-    [HttpGet("{id:long}")]
-    public async Task<ActionResult<ChoreDto>> GetChore(long id)
-    {
-        try
-        {
-            var userId = User.GetUserId();
-            var chore = await choreService.GetChoreByIdAsync(userId, id);
-            
-            if (chore == null)
-            {
-                return NotFound(new { Message = "Chore not found" });
-            }
-
-            return Ok(chore);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving chore {ChoreId}", id);
-            return StatusCode(500, "An error occurred while retrieving the chore");
         }
     }
 
@@ -59,7 +37,7 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
         {
             var userId = User.GetUserId();
             var chore = await choreService.CreateChoreAsync(userId, request);
-            return CreatedAtAction(nameof(GetChore), new { id = chore.Id }, chore);
+            return Ok(new { Chores = chore});
         }
         catch (ArgumentException ex)
         {
@@ -72,6 +50,8 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
         }
     }
 
+    // TODO implement I DID IT
+    // TODO implement delete
     [HttpPut("{id:long}")]
     public async Task<ActionResult<ChoreDto>> UpdateChore(long id, [FromBody] UpdateChoreRequestDto request)
     {
