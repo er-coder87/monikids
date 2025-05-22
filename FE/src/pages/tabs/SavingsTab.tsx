@@ -88,7 +88,7 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
                 <TimePeriodSelector dateFormat={dateFormat} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm p-4 border border-gray-100/50 dark:border-gray-700/50">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-full">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
                             <PiggyBank className="h-6 w-6 text-blue-600 dark:text-blue-400" />

@@ -53,12 +53,12 @@ export function DashboardTab({ dateFormat, selectedPeriod, currentMonth }: Dashb
             </div>
 
             <div className="lg:col-span-2 flex flex-col space-y-4">
-                {/* <ExpenseTrendChart
+                <ExpenseTrendChart
                     expenses={expenses}
                     dateFormat={dateFormat}
                     selectedPeriod={selectedPeriod}
                     currentMonth={currentMonth}
-                /> */}
+                />
                 <ExpenseCategoryChart
                     expenses={expenses}
                 />

@@ -9,6 +9,9 @@ import LearnMore from './pages/LearnMore';
 import { NavBar } from './components/NavBar';
 import { useUser, UserProvider } from './contexts/UserContext';
 import { TimePeriodProvider } from './contexts/TimePeriodContext';
+import { SavingsProvider } from './contexts/SavingsContext';
+import { GoodDeedsProvider } from './contexts/GoodDeedsContext';
+import { ChoresProvider } from './contexts/ChoresContext';
 
 function Home() {
   const navigate = useNavigate();
@@ -117,16 +120,22 @@ function App() {
   return (
     <UserProvider>
       <TimePeriodProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/learn-more" element={<LearnMore />} />
-            <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          </Routes>
-        </Router>
+        <SavingsProvider>
+          <GoodDeedsProvider>
+            <ChoresProvider>
+              <Router>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/learn-more" element={<LearnMore />} />
+                  <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                </Routes>
+              </Router>
+            </ChoresProvider>
+          </GoodDeedsProvider>
+        </SavingsProvider>
       </TimePeriodProvider>
     </UserProvider>
   );

@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
-import { useToast } from './ToastContext'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
 import { useUser } from './UserContext'
@@ -37,7 +36,6 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     const [savings, setSavings] = useState<Saving[]>([])
     const [totalSavings, setTotalSavings] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
-    const { addToast } = useToast()
     const { isAuthenticated, isLoading: isAuthLoading } = useUser()
 
     const refetch = async () => {
@@ -55,7 +53,6 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             setTotalSavings(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
         } catch (error) {
             console.error('Error fetching expenses:', error)
-            addToast('Failed to fetch expenses', 'error')
             throw error
         } finally {
             setIsLoading(false)
@@ -83,13 +80,11 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             const newSaving = transformApiTransaction(response.data.transaction)
             setSavings(prev => [...prev, newSaving])
             setTotalSavings(prev => prev + saving.amount)
-            addToast(`Added saving: ${saving.description}`)
         } catch (error) {
             console.error('Error adding saving:', error)
-            addToast('Failed to add saving', 'error')
             throw error
         }
-    }, [addToast])
+    }, [])
 
     const updateSaving = useCallback(async (updatedSaving: Saving) => {
         try {
@@ -109,13 +104,11 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             const newTotal = savings.reduce((sum, saving) =>
                 saving.id === updatedSaving.id ? sum + updatedData.amount : sum + saving.amount, 0)
             setTotalSavings(newTotal)
-            addToast(`Updated saving: ${updatedSaving.description}`)
         } catch (error) {
             console.error('Error updating saving:', error)
-            addToast('Failed to update saving', 'error')
             throw error
         }
-    }, [addToast, savings])
+    }, [savings])
 
     const deleteSaving = useCallback(async (id: string) => {
         try {
@@ -126,14 +119,12 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             if (saving) {
                 setTotalSavings(prev => prev - saving.amount)
                 setSavings(prev => prev.filter(s => s.id !== id))
-                addToast(`Deleted saving: ${saving.description}`)
             }
         } catch (error) {
             console.error('Error deleting saving:', error)
-            addToast('Failed to delete saving', 'error')
             throw error
         }
-    }, [addToast, savings])
+    }, [savings])
 
     return (
         <SavingsContext.Provider value={{ savings, totalSavings, addSaving, updateSaving, deleteSaving, isLoading }}>

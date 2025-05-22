@@ -2,25 +2,23 @@ import { Check, DollarSign, Heart, ListChecks, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useSavings } from "../../contexts/SavingsContext"
 import { useToast } from "../../contexts/ToastContext"
-import { Chore } from "../../models/Chore"
-import { GoodDeed } from "../../models/GoodDeed"
+import { useGoodDeeds } from "../../contexts/GoodDeedsContext"
+import { useChores } from "../../contexts/ChoresContext"
+import { ChoreDto } from "../../models/ChoreDto"
 
 export function ChoresTab() {
-    const [chores, setChores] = useState<Chore[]>([])
     const [choreData, setChoreData] = useState({
         description: '',
         frequency: 1,
         savingAmount: 0
     })
-    const [goodDeed, setGoodDeed] = useState<GoodDeed>({
-        stamps: 0,
-        maxStamps: 10
-    })
+    const { goodDeed, setGoodDeed, updateGoodDeed, isLoading: isGoodDeedsLoading } = useGoodDeeds()
+    const { chores, addChore, updateChore, deleteChore, completeChore, isLoading: isChoresLoading } = useChores()
     const [hasStampChanges, setHasStampChanges] = useState(false)
     const { addSaving } = useSavings()
     const { addToast } = useToast()
 
-    const handleAddSaving = (chore: Chore) => {
+    const handleAddSaving = async (chore: ChoreDto) => {
         const today = new Date()
         const formattedDate = today.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -30,101 +28,88 @@ export function ChoresTab() {
 
         addSaving({
             description: `Done ${chore.description} on ${formattedDate}`,
-            amount: chore.savingAmount,
+            amount: chore.allowanceAmount ?? 0,
             date: today,
             isRecurring: false,
         })
 
-        setChores(prev => prev.map(c =>
-            c.id === chore.id ? { ...c, savingAdded: true } : c
-        ))
-
-        addToast(`Added saving $${chore.savingAmount} for ${chore.description}`)
+        try {
+            await updateChore(chore.id, { completeDateTime: today.toISOString() })
+            addToast(`Added saving $${chore.allowanceAmount} for ${chore.description}`)
+        } catch (error) {
+            console.error('Error updating chore:', error)
+        }
     }
 
     const handleChoreSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        const newChore: Chore = {
-            id: crypto.randomUUID(),
-            ...choreData,
-            completedCount: 0
+        try {
+            await addChore({
+                description: choreData.description,
+                maxCount: choreData.frequency,
+                currentCount: 0,
+                allowanceAmount: choreData.savingAmount
+            })
+
+            setChoreData({
+                description: '',
+                frequency: 1,
+                savingAmount: 0
+            })
+        } catch (error) {
+            console.error('Error submitting chore:', error)
         }
-
-        setChores(prev => [...prev, newChore])
-
-        setChoreData({
-            description: '',
-            frequency: 1,
-            savingAmount: 0
-        })
-    }
-
-    const handleCompleteChore = (choreId: string) => {
-        setChores(prev => prev.map(chore => {
-            if (chore.id === choreId) {
-                const newCompletedCount = chore.completedCount + 1
-                return { ...chore, completedCount: newCompletedCount }
-            }
-            return chore
-        }))
     }
 
     const handleSetStamps = (newCount: number) => {
-        setGoodDeed(prev => ({
-            ...prev,
-            stamps: Math.min(newCount, prev.maxStamps),
-        }))
-        setHasStampChanges(true)
-    }
-
-    const handleSubmitGoodDeed = () => {
-        if (goodDeed.stamps === goodDeed.maxStamps) {
-            const today = new Date()
-            const formattedDate = today.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            })
-
-            addSaving({
-                description: `Completed ${goodDeed.maxStamps} good deeds on ${formattedDate}`,
-                amount: goodDeed.maxStamps * 2, // $2 per good deed
-                date: today,
-                isRecurring: false,
-            })
-
-            setGoodDeed(prev => ({
-                ...prev,
-                stamps: 0
-            }))
-
-            addToast(`Added saving $${goodDeed.maxStamps * 2} for completing ${goodDeed.maxStamps} good deeds!`)
+        const updatedGoodDeed = {
+            ...goodDeed,
+            currentCount: newCount
         }
+        setGoodDeed(updatedGoodDeed)
+        setHasStampChanges(true)
     }
 
     const handleMaxStampsChange = (value: number) => {
-        setGoodDeed(prev => ({
-            ...prev,
-            maxStamps: value,
-            stamps: Math.min(prev.stamps, value)
-        }))
+        const updatedGoodDeed = {
+            ...goodDeed,
+            maxCount: value,
+            currentCount: Math.min(goodDeed.currentCount ?? 0, value)
+        }
+        setGoodDeed(updatedGoodDeed)
         setHasStampChanges(true)
     }
 
-    const handleSaveStampChanges = () => {
-        addToast('Stamp configuration saved')
-        setHasStampChanges(false)
+    const handleSaveStampChanges = async () => {
+        try {
+            await updateGoodDeed({
+                maxCount: goodDeed.maxCount ?? undefined,
+                currentCount: goodDeed.currentCount ?? undefined
+            })
+            setHasStampChanges(false)
+            addToast('Good deeds saved successfully')
+        } catch (error) {
+            console.error('Error saving good deeds:', error)
+            addToast('Failed to save good deeds', 'error')
+        }
     }
 
-    const handleDeleteChore = (choreId: string) => {
-        setChores(prev => prev.filter(chore => chore.id !== choreId))
-        addToast('Chore deleted successfully')
+    const handleDeleteByCompletionChore = async (choreId: number) => {
+        try {
+            await deleteChore(choreId)
+            addToast('Completed house chore')
+        } catch (error) {
+            console.error('Error deleting chore:', error)
+        }
     }
 
-    const handleDeleteByCompletionChore = (choreId: string) => {
-        setChores(prev => prev.filter(chore => chore.id !== choreId))
-        addToast('Completed house chore')
+    if (isGoodDeedsLoading || isChoresLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[200px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+        )
     }
 
     return (
@@ -138,7 +123,7 @@ export function ChoresTab() {
                         <div>
                             <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Good Deeds</h2>
                             <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                                {goodDeed.stamps} / {goodDeed.maxStamps}
+                                {goodDeed.currentCount ?? 0} / {goodDeed.maxCount ?? 10}
                             </p>
                         </div>
                     </div>
@@ -151,7 +136,7 @@ export function ChoresTab() {
                         <div>
                             <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Chores Completed</h2>
                             <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                                {(chores.filter(chore => chore.completedCount >= chore.frequency).length)} / {chores.length}
+                                {(chores.filter(chore => (chore.currentCount ?? 0) >= (chore.maxCount ?? 0)).length)} / {chores.length}
                             </p>
                         </div>
                     </div>
@@ -171,7 +156,7 @@ export function ChoresTab() {
                         </label>
                         <select
                             id="maxStamps"
-                            value={goodDeed.maxStamps}
+                            value={goodDeed.maxCount ?? 10}
                             onChange={(e) => handleMaxStampsChange(Number(e.target.value))}
                             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         >
@@ -186,8 +171,8 @@ export function ChoresTab() {
 
                     <div className="flex flex-col items-center space-y-4">
                         <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 max-w-[500px] w-full">
-                            {[...Array(goodDeed.maxStamps)].map((_, index) => {
-                                const isStamped = index < goodDeed.stamps;
+                            {[...Array(goodDeed.maxCount ?? 10)].map((_, index) => {
+                                const isStamped = index < (goodDeed.currentCount ?? 0);
 
                                 return (
                                     <button
@@ -196,7 +181,7 @@ export function ChoresTab() {
                                         aria-label={`Stamp ${index + 1}`}
                                         className={`aspect-square w-full rounded-full border-2 flex items-center justify-center cursor-pointer transform transition-transform duration-150 hover:scale-110
                                             ${isStamped ? 'bg-yellow-400 border-yellow-500' : 'border-gray-300 dark:border-gray-600'}`}
-                                        onClick={() => handleSetStamps(isStamped && index === goodDeed.stamps - 1 ? index : index + 1)}
+                                        onClick={() => handleSetStamps(index + 1)}
                                     >
                                         {isStamped && (
                                             <svg
@@ -318,10 +303,10 @@ export function ChoresTab() {
                                         <p className="font-medium text-gray-900 dark:text-white">{chore.description}</p>
                                         <div className="flex items-center space-x-2">
                                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                ${chore.savingAmount.toFixed(2)}
+                                                ${chore.allowanceAmount?.toFixed(2)}
                                             </span>
-                                            {chore.completedCount >= chore.frequency ? (
-                                                chore.savingAdded ? (
+                                            {(chore.currentCount ?? 0) >= (chore.maxCount ?? 0) ? (
+                                                chore.completeDateTime ? (
                                                     <button
                                                         onClick={() => handleDeleteByCompletionChore(chore.id)}
                                                         className="px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-900/30 flex items-center gap-1"
@@ -340,7 +325,7 @@ export function ChoresTab() {
                                                 )
                                             ) : (
                                                 <button
-                                                    onClick={() => handleDeleteChore(chore.id)}
+                                                    onClick={() => deleteChore(chore.id)}
                                                     className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-1"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -353,10 +338,10 @@ export function ChoresTab() {
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-gray-500 dark:text-gray-400">
-                                                Progress: {chore.completedCount}/{chore.frequency}
+                                                Progress: {chore.currentCount ?? 0}/{chore.maxCount ?? 0}
                                             </span>
                                             <span className="text-gray-500 dark:text-gray-400">
-                                                {Math.round((chore.completedCount / chore.frequency) * 100)}%
+                                                {Math.round(((chore.currentCount ?? 0) / (chore.maxCount ?? 1)) * 100)}%
                                             </span>
                                         </div>
 
@@ -364,16 +349,16 @@ export function ChoresTab() {
                                             <div
                                                 className="h-2.5 rounded-full transition-all duration-300"
                                                 style={{
-                                                    width: `${(chore.completedCount / chore.frequency) * 100}%`,
-                                                    backgroundColor: chore.completedCount >= chore.frequency ? '#059669' : '#2563eb'
+                                                    width: `${((chore.currentCount ?? 0) / (chore.maxCount ?? 1)) * 100}%`,
+                                                    backgroundColor: (chore.currentCount ?? 0) >= (chore.maxCount ?? 0) ? '#059669' : '#2563eb'
                                                 }}
                                             />
                                         </div>
 
-                                        {chore.completedCount >= chore.frequency ? <></> :
+                                        {(chore.currentCount ?? 0) >= (chore.maxCount ?? 0) ? <></> :
                                             <div className="flex">
                                                 <button
-                                                    onClick={() => handleCompleteChore(chore.id)}
+                                                    onClick={() => completeChore(chore.id)}
                                                     className={`w-full md:w-1/4 py-2 px-4 rounded-md text-sm font-medium transition-colors
                                                         bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
                                                 >
