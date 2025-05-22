@@ -14,21 +14,8 @@ interface DashboardTabProps {
 
 export function DashboardTab({ dateFormat, selectedPeriod, currentMonth }: DashboardTabProps) {
     const [expenses, setExpenses] = useState<Expense[]>([])
-    const { expenses: allExpenses, refetch } = useExpenses()
+    const { expenses: allExpenses } = useExpenses()
     const { addToast } = useToast()
-
-    // Initial fetch
-    useEffect(() => {
-        const fetchExpenses = async () => {
-            try {
-                await refetch()
-            } catch (error) {
-                console.error('Error fetching expenses:', error)
-                addToast('Failed to fetch expenses', 'error')
-            }
-        }
-        fetchExpenses()
-    }, []) // Empty dependency array for initial fetch only
 
     // Filter expenses based on selected period
     useEffect(() => {

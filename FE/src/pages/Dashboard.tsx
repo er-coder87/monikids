@@ -25,7 +25,7 @@ const Dashboard = () => {
   // --- State Variables ---
   const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
   const { isAuthenticated, isLoading: isAuthLoading, logout } = useUser();
-  const { expenses, refetch } = useExpenses();
+  const { expenses, isLoading: expensesLoading, refetch } = useExpenses();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTabsOpen, setIsTabsOpen] = useState(false);
@@ -67,13 +67,6 @@ const Dashboard = () => {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
 
-  // Initial fetch when authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isAuthLoading) {
-      refetch();
-    }
-  }, [isAuthenticated, isAuthLoading, refetch]);
-
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
   };
@@ -100,7 +93,7 @@ const Dashboard = () => {
   }, [settingsRef, tabsRef]);
 
   // --- JSX ---
-  if (isAuthLoading) {
+  if (isAuthLoading || expensesLoading) {
     return <LoadingSpinner />;
   }
 

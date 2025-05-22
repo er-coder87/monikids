@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { Expense } from '../models/Expense'
 import { useToast } from './ToastContext'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
+import { useUser } from './UserContext'
 
 const transformApiTransaction = (transaction: ApiTransaction): Expense => ({
     id: transaction.id.toString(),
@@ -15,6 +16,7 @@ const transformApiTransaction = (transaction: ApiTransaction): Expense => ({
 interface ExpenseContextType {
     expenses: Expense[]
     totalExpenses: number
+    isLoading: boolean
     addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>
     updateExpense: (expense: Expense) => Promise<void>
     deleteExpense: (id: string) => Promise<void>
@@ -26,7 +28,38 @@ const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined)
 export function ExpenseProvider({ children }: { children: ReactNode }) {
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [totalExpenses, setTotalExpenses] = useState(0)
+    const [isLoading, setIsLoading] = useState(true)
     const { addToast } = useToast()
+    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
+
+    const refetch = async () => {
+        if (!isAuthenticated || isAuthLoading) return
+
+        setIsLoading(true)
+        try {
+            const response = await apiClient.get<{ message: string, transactions: ApiTransaction[] }>('/transactions')
+            if (response.error) throw new Error(response.error)
+            if (!response.data?.transactions) throw new Error('No data received')
+
+            const expensesData = response.data.transactions
+                .map(transformApiTransaction)
+            setExpenses(expensesData)
+            setTotalExpenses(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
+        } catch (error) {
+            console.error('Error fetching expenses:', error)
+            addToast('Failed to fetch expenses', 'error')
+            throw error
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    // Initial fetch when authenticated
+    useEffect(() => {
+        if (isAuthenticated && !isAuthLoading) {
+            refetch()
+        }
+    }, [isAuthenticated, isAuthLoading])
 
     const addExpense = async (expense: Omit<Expense, 'id'>) => {
         try {
@@ -86,25 +119,16 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const refetch = async () => {
-        try {
-            const response = await apiClient.get<{ message: string, transactions: ApiTransaction[] }>('/transactions')
-            if (response.error) throw new Error(response.error)
-            if (!response.data?.transactions) throw new Error('No data received')
-
-            const expensesData = response.data.transactions
-                .map(transformApiTransaction)
-            setExpenses(expensesData)
-            setTotalExpenses(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
-        } catch (error) {
-            console.error('Error fetching expenses:', error)
-            addToast('Failed to fetch expenses', 'error')
-            throw error
-        }
-    }
-
     return (
-        <ExpenseContext.Provider value={{ expenses, totalExpenses, addExpense, updateExpense, deleteExpense, refetch }}>
+        <ExpenseContext.Provider value={{
+            expenses,
+            totalExpenses,
+            isLoading,
+            addExpense,
+            updateExpense,
+            deleteExpense,
+            refetch
+        }}>
             {children}
         </ExpenseContext.Provider>
     )
