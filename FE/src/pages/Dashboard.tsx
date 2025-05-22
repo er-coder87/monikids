@@ -25,7 +25,6 @@ const Dashboard = () => {
   // --- State Variables ---
   const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
   const { isAuthenticated, isLoading: isAuthLoading, logout } = useUser();
-  const { expenses, isLoading: expensesLoading, refetch } = useExpenses();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTabsOpen, setIsTabsOpen] = useState(false);
@@ -51,10 +50,6 @@ const Dashboard = () => {
   const openExportModal = () => {
     setIsSettingsOpen(false);
     setIsExportModalOpen(true);
-  };
-
-  const handleExpensesImported = (newExpenses: Expense[]) => {
-    refetch();
   };
 
   // --- Effects ---
@@ -93,7 +88,7 @@ const Dashboard = () => {
   }, [settingsRef, tabsRef]);
 
   // --- JSX ---
-  if (isAuthLoading || expensesLoading) {
+  if (isAuthLoading) {
     return <LoadingSpinner />;
   }
 
@@ -257,18 +252,18 @@ const Dashboard = () => {
                 currentMonth={currentMonth}
               />
             )}
-            {activeTab === 'budget' && (
+            {/* {activeTab === 'budget' && (
               <BudgetTab
                 categories={[]}
                 expenses={expenses}
                 onEditExpense={async () => { }}
                 onDeleteExpense={async () => { }}
               />
-            )}
+            )} */}
 
             {/* Modals */}
-            {isImportModalOpen && <ImportCsvModal onClose={() => setIsImportModalOpen(false)} onExpensesImported={handleExpensesImported} />}
-            {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} expenses={expenses} />}
+            {isImportModalOpen && <ImportCsvModal onClose={() => setIsImportModalOpen(false)} />}
+            {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} />}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowUpDown, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
 import { Expense } from '../models/Expense';
 import { format } from 'date-fns';
 import type { Category } from '../types/category';
@@ -21,13 +21,15 @@ interface SortableHeaderProps {
 }
 
 const SortableHeader: React.FC<SortableHeaderProps> = ({ field, children, onSort, currentSort }) => (
-  <div
-    className="flex items-center space-x-1 cursor-pointer"
+  <th
+    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
     onClick={() => onSort(field)}
   >
-    <span>{children}</span>
-    <ArrowUpDown className={`h-4 w-4 ${currentSort.field === field ? 'text-blue-500' : 'text-gray-400'}`} />
-  </div>
+    <div className="flex items-center space-x-1">
+      <span>{children}</span>
+      <ArrowUpDown className={`h-4 w-4 ${currentSort.field === field ? 'text-blue-500' : 'text-gray-400'}`} />
+    </div>
+  </th>
 );
 
 interface ExpenseTableProps {
@@ -54,7 +56,6 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
     direction: 'desc',
   });
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const sortedExpenses = [...expenses].sort((a, b) => {
     const direction = sortConfig.direction === 'asc' ? 1 : -1;
@@ -83,13 +84,8 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
     });
   };
 
-  const toggleMenu = (id: string) => {
-    setOpenMenuId((prevId) => (prevId === id ? null : id));
-  };
-
   const handleEditExpense = (expense: Expense) => {
     setEditingExpense(expense);
-    setOpenMenuId(null);
   };
 
   const handleSaveExpense = (updatedExpense: Expense) => {
@@ -97,107 +93,104 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
     setEditingExpense(null);
   };
 
-  if (expenses.length > 0) {
-    return <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <div className="inline-block min-w-full align-middle">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-gray-700/50">
-                <th className="w-[15%] px-2 sm:px-4 py-2.5 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortableHeader
-                    field="date"
-                    onSort={handleSort}
-                    currentSort={sortConfig}
-                  >
-                    Date
-                  </SortableHeader>
-                </th>
-                <th className="w-[35%] px-2 sm:px-4 py-2.5 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortableHeader
-                    field="description"
-                    onSort={handleSort}
-                    currentSort={sortConfig}
-                  >
-                    Description
-                  </SortableHeader>
-                </th>
-                <th className="w-[20%] px-2 sm:px-4 py-2.5 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortableHeader
-                    field="category"
-                    onSort={handleSort}
-                    currentSort={sortConfig}
-                  >
-                    Category
-                  </SortableHeader>
-                </th>
-                <th className="w-[15%] px-2 sm:px-4 py-2.5 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortableHeader
-                    field="amount"
-                    onSort={handleSort}
-                    currentSort={sortConfig}
-                  >
-                    Amount
-                  </SortableHeader>
-                </th>
-                <th className="w-[15%] px-2 sm:px-4 py-2.5 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedExpenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
-                    {format(new Date(expense.date), dateFormat)}
-                  </td>
-                  <td className="px-2 sm:px-4 py-3 text-sm text-gray-900 dark:text-gray-100 text-center">
-                    <div className="truncate" title={expense.description}>
-                      {expense.description}
-                    </div>
-                  </td>
-                  <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
-                    {expense.category}
-                  </td>
-                  <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
-                    ${expense.amount.toFixed(2)}
-                  </td>
-                  <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
-                    <div className="relative inline-block">
-                      <button
-                        onClick={() => toggleMenu(expense.id)}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      >
-                        <MoreVertical className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                      </button>
-                      {openMenuId === expense.id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 shadow-lg rounded-lg overflow-hidden z-10 border border-gray-100 dark:border-gray-600 transform -translate-x-1/2 sm:translate-x-0">
-                          <button
-                            onClick={() => handleEditExpense(expense)}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center space-x-2"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span>Edit</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDelete(expense.id);
-                              setOpenMenuId(null);
-                            }}
-                            className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center space-x-2"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+  if (expenses.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Expense History
+        </h2>
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          No expenses added yet
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Expense History
+      </h2>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800/50">
+            <tr>
+              <SortableHeader field="date" onSort={handleSort} currentSort={sortConfig}>
+                Date
+              </SortableHeader>
+              <SortableHeader field="description" onSort={handleSort} currentSort={sortConfig}>
+                Description
+              </SortableHeader>
+              <SortableHeader field="category" onSort={handleSort} currentSort={sortConfig}>
+                Category
+              </SortableHeader>
+              <SortableHeader field="amount" onSort={handleSort} currentSort={sortConfig}>
+                Amount
+              </SortableHeader>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {paginatedExpenses.map((expense) => (
+              <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                  {format(new Date(expense.date), dateFormat)}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                  <div className="truncate" title={expense.description}>
+                    {expense.description}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                  {expense.category}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                  ${expense.amount.toFixed(2)}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => handleEditExpense(expense)}
+                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(expense.id)}
+                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-4 flex justify-center items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
 
       {editingExpense && (
@@ -209,9 +202,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
         />
       )}
     </div>
-  }
-
-  return <></>;
+  );
 }
 
 export default ExpenseTable;

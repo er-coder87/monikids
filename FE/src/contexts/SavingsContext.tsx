@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react'
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
 import { useToast } from './ToastContext'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
+import { useUser } from './UserContext'
 
 interface Saving {
     id: string
@@ -18,7 +19,7 @@ interface SavingsContextType {
     addSaving: (saving: Omit<Saving, 'id'>) => Promise<void>
     updateSaving: (saving: Saving) => Promise<void>
     deleteSaving: (id: string) => Promise<void>
-    refetch: () => Promise<void>
+    isLoading: boolean
 }
 
 const transformApiTransaction = (transaction: ApiTransaction): Saving => ({
@@ -35,25 +36,38 @@ const SavingsContext = createContext<SavingsContextType | undefined>(undefined)
 export function SavingsProvider({ children }: { children: ReactNode }) {
     const [savings, setSavings] = useState<Saving[]>([])
     const [totalSavings, setTotalSavings] = useState(0)
+    const [isLoading, setIsLoading] = useState(true)
     const { addToast } = useToast()
+    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
 
-    const refetch = useCallback(async () => {
+    const refetch = async () => {
+        if (!isAuthenticated || isAuthLoading) return
+
+        setIsLoading(true)
         try {
             const response = await apiClient.get<{ message: string, transactions: ApiTransaction[] }>('/transactions')
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
 
-            const savingsData = response.data.transactions
+            const expensesData = response.data.transactions
                 .map(transformApiTransaction)
-
-            setSavings(savingsData)
-            setTotalSavings(savingsData.reduce((sum, saving) => sum + saving.amount, 0))
+            setSavings(expensesData)
+            setTotalSavings(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
         } catch (error) {
-            console.error('Error fetching savings:', error)
-            addToast('Failed to fetch savings', 'error')
+            console.error('Error fetching expenses:', error)
+            addToast('Failed to fetch expenses', 'error')
             throw error
+        } finally {
+            setIsLoading(false)
         }
-    }, [addToast])
+    }
+
+    // Initial fetch when authenticated
+    useEffect(() => {
+        if (isAuthenticated && !isAuthLoading) {
+            refetch()
+        }
+    }, [isAuthenticated, isAuthLoading])
 
     const addSaving = useCallback(async (saving: Omit<Saving, 'id'>) => {
         try {
@@ -122,7 +136,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     }, [addToast, savings])
 
     return (
-        <SavingsContext.Provider value={{ savings, totalSavings, addSaving, updateSaving, deleteSaving, refetch }}>
+        <SavingsContext.Provider value={{ savings, totalSavings, addSaving, updateSaving, deleteSaving, isLoading }}>
             {children}
         </SavingsContext.Provider>
     )

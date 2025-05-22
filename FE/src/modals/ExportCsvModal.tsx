@@ -1,33 +1,33 @@
 import { Expense } from "../models/Expense";
 
-export const ExportCsvModal = ({ onClose, expenses }: { onClose: () => void; expenses: Expense[] }) => {
-    const handleExport = () => {
-        if (expenses && expenses.length > 0) {
-            const headers = ['Date', 'Description', 'Amount', 'Category'];
-            const csvRows = [
-                headers.join(','),
-                ...expenses.map(expense => [
-                    expense.date.toLocaleDateString(), // Format date based on user preference later
-                    expense.description,
-                    expense.amount.toFixed(2),
-                    expense.category,
-                ].join(',')),
-            ];
-            const csvData = csvRows.join('\n');
-            const filename = 'expenses.csv';
-            const blob = new Blob([csvData], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            onClose();
-        } else {
-            alert('No expenses to export.');
-        }
-    };
+export const ExportCsvModal = ({ onClose }: { onClose: () => void; }) => {
+    // const handleExport = () => {
+    //     if (expenses && expenses.length > 0) {
+    //         const headers = ['Date', 'Description', 'Amount', 'Category'];
+    //         const csvRows = [
+    //             headers.join(','),
+    //             ...expenses.map(expense => [
+    //                 expense.date.toLocaleDateString(), // Format date based on user preference later
+    //                 expense.description,
+    //                 expense.amount.toFixed(2),
+    //                 expense.category,
+    //             ].join(',')),
+    //         ];
+    //         const csvData = csvRows.join('\n');
+    //         const filename = 'expenses.csv';
+    //         const blob = new Blob([csvData], { type: 'text/csv' });
+    //         const url = window.URL.createObjectURL(blob);
+    //         const a = document.createElement('a');
+    //         a.href = url;
+    //         a.download = filename;
+    //         document.body.appendChild(a);
+    //         a.click();
+    //         window.URL.revokeObjectURL(url);
+    //         onClose();
+    //     } else {
+    //         alert('No expenses to export.');
+    //     }
+    // };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

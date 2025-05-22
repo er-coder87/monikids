@@ -37,23 +37,8 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         recurringFrequency: 'monthly'
     })
 
-    const { savings, totalSavings, addSaving, updateSaving, deleteSaving, refetch } = useSavings()
+    const { savings, totalSavings, addSaving, updateSaving, deleteSaving } = useSavings()
     const [editingSaving, setEditingSaving] = useState<Saving | null>(null)
-    const { addToast } = useToast()
-    const [isLoading, setIsLoading] = useState(true)
-
-    useEffect(() => {
-        const loadSavings = async () => {
-            try {
-                await refetch()
-            } catch (error) {
-                console.error('Error loading savings:', error)
-            } finally {
-                setIsLoading(false)
-            }
-        }
-        loadSavings()
-    }, [])
 
     const handleSavingSubmit = async (transaction: PiggyBankTransaction) => {
         try {
@@ -95,12 +80,6 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         } catch (error) {
             console.error('Error deleting saving:', error)
         }
-    }
-
-    if (isLoading) {
-        return <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
     }
 
     return (

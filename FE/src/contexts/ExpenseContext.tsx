@@ -20,7 +20,6 @@ interface ExpenseContextType {
     addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>
     updateExpense: (expense: Expense) => Promise<void>
     deleteExpense: (id: string) => Promise<void>
-    refetch: () => Promise<void>
 }
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined)
@@ -127,7 +126,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             addExpense,
             updateExpense,
             deleteExpense,
-            refetch
         }}>
             {children}
         </ExpenseContext.Provider>

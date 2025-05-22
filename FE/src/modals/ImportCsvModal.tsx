@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Expense } from "../models/Expense";
 
-export const ImportCsvModal = ({ onClose, onExpensesImported }: { onClose: () => void; onExpensesImported: (expenses: Expense[]) => void }) => {
+export const ImportCsvModal = ({ onClose }: { onClose: () => void; }) => {
     const [csvFile, setCsvFile] = useState<File | null>(null);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,7 +16,6 @@ export const ImportCsvModal = ({ onClose, onExpensesImported }: { onClose: () =>
             reader.onload = async (e) => {
                 const csvData = e.target?.result as string;
                 const parsedExpenses = parseCsvData(csvData);
-                onExpensesImported(parsedExpenses);
                 onClose();
             };
             reader.readAsText(csvFile);
