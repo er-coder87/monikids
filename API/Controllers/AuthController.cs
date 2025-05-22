@@ -80,6 +80,16 @@ namespace ExpenseTrackerApi.Controllers
             }
 
             var token = GenerateJwtToken(user);
+            
+            Response.Cookies.Append("auth", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,                
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(1440),
+                Path = "/"
+            });
+            
             return Ok(new
             {
                 token, User = new UserDto()
