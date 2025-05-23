@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
-import { useToast } from './ToastContext'
 import { useUser } from './UserContext'
 
 interface ChoreDto {
@@ -17,7 +16,6 @@ interface CreateChoreRequest {
     maxCount: number
     currentCount: number
     allowanceAmount: number
-    completeDateTime?: Date
 }
 
 interface ChoresContextType {
@@ -39,10 +37,9 @@ interface ChoresProviderProps {
 export function ChoresProvider({ children }: ChoresProviderProps) {
     const [chores, setChores] = useState<ChoreDto[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const { addToast } = useToast()
     const { isAuthenticated, isLoading: isAuthLoading } = useUser()
 
-    const fetchChores = useCallback(async () => {
+    async function fetchChores() {
         if (!isAuthenticated || isAuthLoading) return
 
         setIsLoading(true)
@@ -50,10 +47,7 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             const response = await apiClient.get<ChoreDto[]>('/chores')
 
             if (response.error) {
-                if (response.error.includes('401')) {
-                    // Don't show error toast for 401, just return
-                    return
-                }
+                if (response.error.startsWith('401:')) return
                 throw new Error(response.error)
             }
 
@@ -64,21 +58,18 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             setChores(response.data)
         } catch (error) {
             console.error('Error fetching chores:', error)
-            if (!(error instanceof Error && error.message.includes('401'))) {
-                addToast('Failed to fetch chores', 'error')
-            }
         } finally {
             setIsLoading(false)
         }
-    }, [isAuthenticated, isAuthLoading, addToast])
+    }
 
     useEffect(() => {
         if (isAuthenticated && !isAuthLoading) {
             fetchChores()
         }
-    }, [isAuthenticated, isAuthLoading, fetchChores])
+    }, [isAuthenticated, isAuthLoading])
 
-    const addChore = useCallback(async (chore: CreateChoreRequest) => {
+    const addChore = async (chore: CreateChoreRequest) => {
         setIsLoading(true)
         try {
             const response = await apiClient.post<ChoreDto>('/chores', chore)
@@ -92,17 +83,15 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             }
 
             setChores(prev => [...prev, response.data as ChoreDto])
-            addToast('Chore added successfully')
         } catch (error) {
             console.error('Error adding chore:', error)
-            addToast('Failed to add chore', 'error')
             throw error
         } finally {
             setIsLoading(false)
         }
-    }, [addToast])
+    }
 
-    const updateChore = useCallback(async (choreId: number, updates: Partial<ChoreDto>) => {
+    const updateChore = async (choreId: number, updates: Partial<ChoreDto>) => {
         setIsLoading(true)
         try {
             const response = await apiClient.put<ChoreDto>(`/chores/${choreId}`, updates)
@@ -120,14 +109,13 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             ))
         } catch (error) {
             console.error('Error updating chore:', error)
-            addToast('Failed to update chore', 'error')
             throw error
         } finally {
             setIsLoading(false)
         }
-    }, [addToast])
+    }
 
-    const deleteChore = useCallback(async (choreId: number) => {
+    const deleteChore = async (choreId: number) => {
         setIsLoading(true)
         try {
             const response = await apiClient.delete(`/chores/${choreId}`)
@@ -137,17 +125,15 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             }
 
             setChores(prev => prev.filter(chore => chore.id !== choreId))
-            addToast('Chore deleted successfully')
         } catch (error) {
             console.error('Error deleting chore:', error)
-            addToast('Failed to delete chore', 'error')
             throw error
         } finally {
             setIsLoading(false)
         }
-    }, [addToast])
+    }
 
-    const completeChore = useCallback(async (choreId: number) => {
+    const completeChore = async (choreId: number) => {
         setIsLoading(true)
         try {
             const response = await apiClient.put<ChoreDto>(`/chores/${choreId}/complete`, {})
@@ -163,15 +149,13 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             setChores(prev => prev.map(chore =>
                 chore.id === choreId ? (response.data as ChoreDto) : chore
             ))
-            addToast('Chore completed successfully')
         } catch (error) {
             console.error('Error completing chore:', error)
-            addToast('Failed to complete chore', 'error')
             throw error
         } finally {
             setIsLoading(false)
         }
-    }, [addToast])
+    }
 
     return (
         <ChoresContext.Provider value={{
