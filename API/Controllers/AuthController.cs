@@ -19,7 +19,7 @@ namespace ExpenseTrackerApi.Controllers
     public class AuthController(IConfiguration configuration, IUserService userService) : ControllerBase
     {
         [HttpPost("validate-token")]
-        [Authorize(AuthenticationSchemes = "Bearer")] // Ensure only requests with a valid Bearer token reach this
+        [Authorize(AuthenticationSchemes = "Bearer")] 
         public IActionResult ValidateToken()
         {
             var user = User.Identity?.Name;
@@ -144,8 +144,8 @@ namespace ExpenseTrackerApi.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(1440),
             });
             
             return Ok(new { user = new { id = user.Id, email = user.Email } });
