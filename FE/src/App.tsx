@@ -6,7 +6,10 @@ import Login from './pages/Login';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import SignUp from './pages/SignUp';
 import LearnMore from './pages/LearnMore';
+import PrivacyPolicy from './pages/legal/privacy-policy';
+import TermsOfService from './pages/legal/terms-of-service';
 import { NavBar } from './components/NavBar';
+import { Footer } from './components/Footer';
 import { useUser, UserProvider } from './contexts/UserContext';
 import { TimePeriodProvider } from './contexts/TimePeriodContext';
 import { SavingsProvider } from './contexts/SavingsContext';
@@ -124,14 +127,21 @@ function App() {
           <GoodDeedsProvider>
             <ChoresProvider>
               <Router>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/learn-more" element={<LearnMore />} />
-                  <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                </Routes>
+                <div className="flex flex-col min-h-screen">
+                  <div className="flex-grow">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<SignUp />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/learn-more" element={<LearnMore />} />
+                      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                      <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+                      <Route path="/legal/terms-of-service" element={<TermsOfService />} />
+                    </Routes>
+                  </div>
+                  <Footer />
+                </div>
               </Router>
             </ChoresProvider>
           </GoodDeedsProvider>

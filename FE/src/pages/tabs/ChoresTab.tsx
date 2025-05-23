@@ -1,10 +1,105 @@
-import { Check, DollarSign, Heart, ListChecks, Trash2 } from "lucide-react"
+import { Check, DollarSign, Heart, ListChecks, Trash2, Star } from "lucide-react"
 import { useState } from "react"
 import { useSavings } from "../../contexts/SavingsContext"
 import { useToast } from "../../contexts/ToastContext"
 import { useGoodDeeds } from "../../contexts/GoodDeedsContext"
 import { useChores } from "../../contexts/ChoresContext"
 import { ChoreDto } from "../../models/ChoreDto"
+
+interface ChoreCardProps {
+    chore: ChoreDto
+    onComplete: (chore: ChoreDto) => Promise<void>
+    onDelete: (choreId: number) => Promise<void>
+    onAddSaving: (chore: ChoreDto) => Promise<void>
+}
+
+function ChoreCard({ chore, onComplete, onDelete, onAddSaving }: ChoreCardProps) {
+    const progress = (chore.currentCount ?? 0) / (chore.maxCount ?? 1)
+    const isCompleted = (chore.currentCount ?? 0) >= (chore.maxCount ?? 0)
+    const isPaid = !!chore.completeDateTime
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+                            {chore.description}
+                        </h3>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <DollarSign className="h-4 w-4" />
+                            <span>${chore.allowanceAmount?.toFixed(2)}</span>
+                            <span>•</span>
+                            <span>{chore.currentCount ?? 0}/{chore.maxCount ?? 0} completed</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {isCompleted ? (
+                            isPaid ? (
+                                <button
+                                    onClick={() => onDelete(chore.id)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-900/30"
+                                >
+                                    <Check className="h-4 w-4" />
+                                    <span>Completed</span>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onAddSaving(chore)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                                >
+                                    <DollarSign className="h-4 w-4" />
+                                    <span>Add Saving</span>
+                                </button>
+                            )
+                        ) : (
+                            <button
+                                onClick={() => onDelete(chore.id)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                <span>Delete</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">
+                            Progress
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                            {Math.round(progress * 100)}%
+                        </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{
+                                width: `${progress * 100}%`,
+                                backgroundColor: isCompleted ? '#059669' : '#2563eb'
+                            }}
+                        />
+                    </div>
+
+                    {!isCompleted && (
+                        <button
+                            onClick={() => onComplete(chore)}
+                            className="w-full mt-3 py-2 px-4 rounded-md text-sm font-medium transition-colors
+                                bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                                flex items-center justify-center gap-2"
+                        >
+                            <Star className="h-4 w-4" />
+                            <span>I Did It!</span>
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export function ChoresTab() {
     const [choreData, setChoreData] = useState({
@@ -223,14 +318,15 @@ export function ChoresTab() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                        <ListChecks className="h-5 w-5 mr-2" />
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <ListChecks className="h-5 w-5" />
                         House Chores
                     </h2>
                 </div>
-                <form onSubmit={handleChoreSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                <form onSubmit={handleChoreSubmit} className="space-y-4 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label htmlFor="choreDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Chore Description
@@ -288,88 +384,26 @@ export function ChoresTab() {
                             className="w-full md:w-1/4 py-2 px-4 rounded-md text-sm font-medium transition-colors
                                 bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                            Add
+                            Add Chore
                         </button>
                     </div>
                 </form>
 
-                {chores.length > 0 && (
-                    <div className="mt-6">
-                        <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Current Chores</h3>
-                        <div className="space-y-3">
-                            {chores.map(chore => (
-                                <div key={chore.id} className="flex flex-col p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600/50">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <p className="font-medium text-gray-900 dark:text-white">{chore.description}</p>
-                                        <div className="flex items-center space-x-2">
-                                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                ${chore.allowanceAmount?.toFixed(2)}
-                                            </span>
-                                            {(chore.currentCount ?? 0) >= (chore.maxCount ?? 0) ? (
-                                                chore.completeDateTime ? (
-                                                    <button
-                                                        onClick={() => handleDeleteByCompletionChore(chore.id)}
-                                                        className="px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-900/30 flex items-center gap-1"
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                        <span>Completed</span>
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleAddSaving(chore)}
-                                                        className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 flex items-center gap-1"
-                                                    >
-                                                        <DollarSign className="h-4 w-4" />
-                                                        <span>Add Saving</span>
-                                                    </button>
-                                                )
-                                            ) : (
-                                                <button
-                                                    onClick={() => deleteChore(chore.id)}
-                                                    className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-1"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    <span>Delete</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-500 dark:text-gray-400">
-                                                Progress: {chore.currentCount ?? 0}/{chore.maxCount ?? 0}
-                                            </span>
-                                            <span className="text-gray-500 dark:text-gray-400">
-                                                {Math.round(((chore.currentCount ?? 0) / (chore.maxCount ?? 1)) * 100)}%
-                                            </span>
-                                        </div>
-
-                                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
-                                            <div
-                                                className="h-2.5 rounded-full transition-all duration-300"
-                                                style={{
-                                                    width: `${((chore.currentCount ?? 0) / (chore.maxCount ?? 1)) * 100}%`,
-                                                    backgroundColor: (chore.currentCount ?? 0) >= (chore.maxCount ?? 0) ? '#059669' : '#2563eb'
-                                                }}
-                                            />
-                                        </div>
-
-                                        {(chore.currentCount ?? 0) >= (chore.maxCount ?? 0) ? <></> :
-                                            <div className="flex">
-                                                <button
-                                                    onClick={() => completeChore(chore.id)}
-                                                    className={`w-full md:w-1/4 py-2 px-4 rounded-md text-sm font-medium transition-colors
-                                                        bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                                                >
-                                                    I Did It!
-                                                </button>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                {chores.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {chores.map(chore => (
+                            <ChoreCard
+                                key={chore.id}
+                                chore={chore}
+                                onComplete={completeChore}
+                                onDelete={deleteChore}
+                                onAddSaving={handleAddSaving}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        No chores added yet. Add your first chore above!
                     </div>
                 )}
             </div>

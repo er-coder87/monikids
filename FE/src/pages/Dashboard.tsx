@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import useDarkMode from '../hooks/useDarkMode';
 import { ExportCsvModal } from '../modals/ExportCsvModal';
-import { ImportCsvModal } from '../modals/ImportCsvModal';
-import { Expense } from '../models/Expense';
 import UnauthorizedPage from './UnauthorizedPage';
 import { NavBar } from '../components/NavBar';
 import { BudgetTab } from "./tabs/BudgetTab";
@@ -16,7 +14,6 @@ import { useTimePeriod } from '../contexts/TimePeriodContext';
 import { SavingsTab } from './tabs/SavingsTab';
 import { ChoresTab } from './tabs/ChoresTab';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { useExpenses } from '../contexts/ExpenseContext';
 
 type Tab = 'dashboard' | 'piggy-bank' | 'chores' | 'savings' | 'expenses' | 'budget';
 
@@ -29,21 +26,10 @@ const Dashboard = () => {
   const settingsRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const [dateFormat, setDateFormat] = useState<'dd-MM-yyyy' | 'yyyy-MM-dd'>('dd-MM-yyyy');
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { selectedPeriod, currentMonth } = useTimePeriod();
 
   const navigate = useNavigate();
-
-  const handleDateFormatChange = (format: 'dd-MM-yyyy' | 'yyyy-MM-dd') => {
-    setDateFormat(format);
-    setIsSettingsOpen(false);
-  };
-
-  const openImportModal = () => {
-    setIsSettingsOpen(false);
-    setIsImportModalOpen(true);
-  };
 
   const openExportModal = () => {
     setIsSettingsOpen(false);
@@ -174,42 +160,12 @@ const Dashboard = () => {
                 {isSettingsOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-md shadow-xl z-10 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
                     <div className="py-1">
-                      <h6 className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Date Format</h6>
-                      <button
-                        onClick={() => handleDateFormatChange('dd-MM-yyyy')}
-                        className={`block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 ${dateFormat === 'dd-MM-yyyy' ? 'font-semibold' : ''}`}
-                      >
-                        DD-MM-YYYY
-                      </button>
-                      <button
-                        onClick={() => handleDateFormatChange('yyyy-MM-dd')}
-                        className={`block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 ${dateFormat === 'yyyy-MM-dd' ? 'font-semibold' : ''}`}
-                      >
-                        YYYY-MM-DD
-                      </button>
-                      <hr className="border-gray-200 dark:border-gray-700 my-1" />
                       <h6 className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Data</h6>
-                      <button
-                        onClick={openImportModal}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
-                      >
-                        Import CSV
-                      </button>
                       <button
                         onClick={openExportModal}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
                       >
                         Export CSV
-                      </button>
-                      <hr className="border-gray-200 dark:border-gray-700 my-1" />
-                      <button
-                        onClick={() => {
-                          logout();
-                          navigate('/login');
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
-                      >
-                        Logout
                       </button>
                     </div>
                   </div>
@@ -256,7 +212,6 @@ const Dashboard = () => {
           )}
 
           {/* Modals */}
-          {isImportModalOpen && <ImportCsvModal onClose={() => setIsImportModalOpen(false)} />}
           {isExportModalOpen && <ExportCsvModal onClose={() => setIsExportModalOpen(false)} />}
         </div>
       </div>

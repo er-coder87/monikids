@@ -51,6 +51,7 @@ export function ExpensesTab({
             default:
                 break
         }
+
         setExpenses(filteredExpenses)
     }, [allExpenses, selectedPeriod, currentMonth])
 
@@ -111,7 +112,7 @@ export function ExpensesTab({
                         <div>
                             <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Expenses</h2>
                             <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                                ${totalExpenses.toFixed(2)}
+                                ${Math.abs(totalExpenses).toFixed(2)}
                             </p>
                         </div>
                     </div>

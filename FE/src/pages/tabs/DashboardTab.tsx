@@ -4,7 +4,6 @@ import ExpenseTrendChart from "../../components/ExpenseTrendChart";
 import { Expense } from "../../models/Expense";
 import { useExpenses } from "../../contexts/ExpenseContext";
 import { TimePeriodSelector } from "../../components/TimePeriodSelector";
-import { useToast } from "../../contexts/ToastContext";
 
 interface DashboardTabProps {
     dateFormat: 'dd-MM-yyyy' | 'yyyy-MM-dd'
@@ -15,7 +14,6 @@ interface DashboardTabProps {
 export function DashboardTab({ dateFormat, selectedPeriod, currentMonth }: DashboardTabProps) {
     const [expenses, setExpenses] = useState<Expense[]>([])
     const { expenses: allExpenses } = useExpenses()
-    const { addToast } = useToast()
 
     // Filter expenses based on selected period
     useEffect(() => {

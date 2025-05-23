@@ -1,15 +1,24 @@
 import { useState } from "react";
 import { useSavings } from "../../contexts/SavingsContext";
+import { WithdrawModal } from "../../components/modals/WithdrawModal";
+import { PiggyBank } from "lucide-react";
 
 export function PiggyBankTab() {
     const [isFlipped, setIsFlipped] = useState(false);
-    const { totalSavings } = useSavings();
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const { totalSavings, withdraw } = useSavings();
 
     const handleClick = () => {
         setIsFlipped(!isFlipped);
     };
+
+    const handleWithdraw = (amount: number) => {
+        withdraw(amount);
+    };
+
     const pinkFill = "#FFB6C1"; // Light pink
     const darkPinkStroke = "#FF69B4"; // Hot pink
+
     return (
         <div className="flex flex-col items-center justify-center sm:p-6">
             <div
@@ -167,6 +176,22 @@ m-336 23 c-3 -3 -12 -4 -19 -1 -8 3 -5 6 6 6 11 1 17 -2 13 -5z m263 -74 c18
             <p className="mt-8 sm:mt-10 text-base sm:text-lg text-gray-600 dark:text-gray-400 text-center max-w-md">
                 Click the piggy bank to see your savings!
             </p>
+
+            <button
+                onClick={() => setIsWithdrawModalOpen(true)}
+                disabled={totalSavings <= 0}
+                className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <PiggyBank className="w-5 h-5" />
+                Take from Piggy
+            </button>
+
+            <WithdrawModal
+                isOpen={isWithdrawModalOpen}
+                onClose={() => setIsWithdrawModalOpen(false)}
+                onWithdraw={handleWithdraw}
+                maxAmount={totalSavings}
+            />
 
             <style>
                 {`

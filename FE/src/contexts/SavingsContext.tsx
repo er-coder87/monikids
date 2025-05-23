@@ -18,6 +18,7 @@ interface SavingsContextType {
     addSaving: (saving: Omit<Saving, 'id'>) => Promise<void>
     updateSaving: (saving: Saving) => Promise<void>
     deleteSaving: (id: string) => Promise<void>
+    withdraw: (amount: number) => Promise<void>
     isLoading: boolean
 }
 
@@ -47,12 +48,12 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
 
-            const expensesData = response.data.transactions
+            const transactions = response.data.transactions
                 .map(transformApiTransaction)
-            setSavings(expensesData)
-            setTotalSavings(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
+                .filter(saving => saving.amount > 0)
+            setSavings(transactions)
+            setTotalSavings(transactions.reduce((sum, saving) => sum + saving.amount, 0))
         } catch (error) {
-            console.error('Error fetching expenses:', error)
             throw error
         } finally {
             setIsLoading(false)
@@ -126,8 +127,29 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         }
     }, [savings])
 
+    const withdraw = useCallback(async (amount: number) => {
+        try {
+            const response = await apiClient.post<ApiResponse>('/transactions', {
+                amount: -amount, // Negative amount for withdrawal
+                description: 'Cash out',
+                category: 'Savings',
+                transactionDate: new Date().toISOString().split('T')[0]
+            })
+
+            if (response.error) throw new Error(response.error)
+            if (!response.data) throw new Error('No data received')
+
+            const newSaving = transformApiTransaction(response.data.transaction)
+            setSavings(prev => [...prev, newSaving])
+            setTotalSavings(prev => prev - amount)
+        } catch (error) {
+            console.error('Error withdrawing money:', error)
+            throw error
+        }
+    }, [])
+
     return (
-        <SavingsContext.Provider value={{ savings, totalSavings, addSaving, updateSaving, deleteSaving, isLoading }}>
+        <SavingsContext.Provider value={{ savings, totalSavings, addSaving, updateSaving, deleteSaving, withdraw, isLoading }}>
             {children}
         </SavingsContext.Provider>
     )

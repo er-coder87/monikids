@@ -223,12 +223,12 @@ export default function SignUp() {
                     </p>
 
                     <p className="mt-4 text-center text-xs text-gray-500">
-                        By signing up, you agree to our{' '}
-                        <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                        By continuing, you agree to our{' '}
+                        <a href="/legal/terms-of-service" className="text-indigo-600 hover:text-indigo-500">
                             Terms of Service
                         </a>{' '}
                         and{' '}
-                        <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                        <a href="/legal/privacy-policy" className="text-indigo-600 hover:text-indigo-500">
                             Privacy Policy
                         </a>
                     </p>

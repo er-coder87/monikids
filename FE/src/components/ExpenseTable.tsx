@@ -148,7 +148,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
                   {expense.category}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                  ${expense.amount.toFixed(2)}
+                  ${Math.abs(expense.amount).toFixed(2)}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                   <div className="flex justify-end space-x-2">

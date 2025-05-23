@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { Expense } from '../models/Expense'
-import { useToast } from './ToastContext'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
 import { useUser } from './UserContext'
@@ -28,7 +27,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [totalExpenses, setTotalExpenses] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
-    const { addToast } = useToast()
     const { isAuthenticated, isLoading: isAuthLoading } = useUser()
 
     const refetch = async () => {
@@ -42,11 +40,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             const expensesData = response.data.transactions
                 .map(transformApiTransaction)
+                .filter(expense => expense.amount < 0);
+
             setExpenses(expensesData)
             setTotalExpenses(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
         } catch (error) {
             console.error('Error fetching expenses:', error)
-            addToast('Failed to fetch expenses', 'error')
             throw error
         } finally {
             setIsLoading(false)
@@ -62,19 +61,20 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const addExpense = async (expense: Omit<Expense, 'id'>) => {
         try {
-            console.log('Sending expense data:', JSON.stringify(expense, null, 2))
-            const response = await apiClient.post<ApiResponse>('/transactions', expense)
-            console.log('API Response:', response)
+            const adjustedExpense = {
+                ...expense,
+                amount: -Math.abs(expense.amount),
+            };
+
+            const response = await apiClient.post<ApiResponse>('/transactions', adjustedExpense)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
 
             const newExpense = transformApiTransaction(response.data.transaction)
             setExpenses(prev => [...prev, newExpense])
             setTotalExpenses(prev => prev + expense.amount)
-            addToast(`Added expense: ${expense.description}`)
         } catch (error) {
             console.error('Error adding expense:', error)
-            addToast('Failed to add expense', 'error')
             throw error
         }
     }
@@ -92,10 +92,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             const newTotal = expenses.reduce((sum, expense) =>
                 expense.id === updatedExpense.id ? sum + updatedData.amount : sum + expense.amount, 0)
             setTotalExpenses(newTotal)
-            addToast(`Updated expense: ${updatedExpense.description}`)
         } catch (error) {
             console.error('Error updating expense:', error)
-            addToast('Failed to update expense', 'error')
             throw error
         }
     }
@@ -109,11 +107,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             if (expense) {
                 setTotalExpenses(prev => prev - expense.amount)
                 setExpenses(prev => prev.filter(e => e.id !== id))
-                addToast(`Deleted expense: ${expense.description}`)
             }
         } catch (error) {
             console.error('Error deleting expense:', error)
-            addToast('Failed to delete expense', 'error')
             throw error
         }
     }
