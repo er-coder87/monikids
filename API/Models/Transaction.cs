@@ -11,13 +11,15 @@ public partial class Transaction
 
     public long? UserId { get; set; }
 
-    public DateOnly? TransactionDate { get; set; }
+    public DateTime? TransactionDate { get; set; }
 
     public decimal? Amount { get; set; }
 
     public long? CategoryId { get; set; }
 
     public string? Description { get; set; }
+
+    public string? Type { get; set; }
 
     public virtual Category? Category { get; set; }
 

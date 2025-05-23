@@ -8,7 +8,7 @@ public class TransactionDto
 
     public long? UserId { get; set; }
 
-    public DateOnly? TransactionDate { get; set; }
+    public DateTime? TransactionDate { get; set; }
 
     public decimal? Amount { get; set; }
 
@@ -17,4 +17,5 @@ public class TransactionDto
     public string? Description { get; set; }
 
     public virtual CategoryDto? Category { get; set; }
+    public string? Type { get; set; }
 }

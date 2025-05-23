@@ -6,8 +6,9 @@ import { PiggyBank } from "lucide-react";
 export function PiggyBankTab() {
     const [isFlipped, setIsFlipped] = useState(false);
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-    const { totalSavings, withdraw } = useSavings();
+    const { savingsOrCashOuts, withdraw } = useSavings();
 
+    const currentSavings = savingsOrCashOuts.reduce((sum, saving) => sum + saving.amount, 0)
     const handleClick = () => {
         setIsFlipped(!isFlipped);
     };
@@ -166,8 +167,8 @@ m-336 23 c-3 -3 -12 -4 -19 -1 -8 3 -5 6 6 6 11 1 17 -2 13 -5z m263 -74 c18
                     className={`absolute w-full h-full backface-hidden rotate-y-180 ${isFlipped ? 'block' : 'hidden'}`}
                 >
                     <div className="w-full h-full bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900 dark:to-pink-800 rounded-full flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-4 border-pink-300 dark:border-pink-600 shadow-lg">
-                        <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 dark:text-pink-300 mb-3">Total Savings</h2>
-                        <p className="text-4xl sm:text-5xl font-bold text-pink-700 dark:text-pink-200">${totalSavings.toFixed(2)}</p>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 dark:text-pink-300 mb-3">Current Savings</h2>
+                        <p className="text-4xl sm:text-5xl font-bold text-pink-700 dark:text-pink-200">${currentSavings.toFixed(2)}</p>
                         <p className="text-sm sm:text-base text-pink-500 dark:text-pink-400 mt-4">Click to flip back</p>
                     </div>
                 </div>
@@ -179,7 +180,7 @@ m-336 23 c-3 -3 -12 -4 -19 -1 -8 3 -5 6 6 6 11 1 17 -2 13 -5z m263 -74 c18
 
             <button
                 onClick={() => setIsWithdrawModalOpen(true)}
-                disabled={totalSavings <= 0}
+                disabled={currentSavings <= 0}
                 className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <PiggyBank className="w-5 h-5" />
@@ -190,7 +191,7 @@ m-336 23 c-3 -3 -12 -4 -19 -1 -8 3 -5 6 6 6 11 1 17 -2 13 -5z m263 -74 c18
                 isOpen={isWithdrawModalOpen}
                 onClose={() => setIsWithdrawModalOpen(false)}
                 onWithdraw={handleWithdraw}
-                maxAmount={totalSavings}
+                maxAmount={currentSavings}
             />
 
             <style>

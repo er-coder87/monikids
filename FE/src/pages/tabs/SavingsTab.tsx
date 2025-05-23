@@ -1,11 +1,11 @@
 import { Calendar, DollarSign, PiggyBank } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import DatePicker from "react-datepicker"
 import { EditSavingModal } from "../../components/EditSavingModal"
 import { SavingTable } from "../../components/SavingTable"
 import { useSavings } from "../../contexts/SavingsContext"
-import { useToast } from "../../contexts/ToastContext"
 import { TimePeriodSelector } from "../../components/TimePeriodSelector"
+import { useTimePeriod } from "../../contexts/TimePeriodContext"
 
 interface PiggyBankTransaction {
     description: string
@@ -37,8 +37,23 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         recurringFrequency: 'monthly'
     })
 
-    const { savings, totalSavings, addSaving, updateSaving, deleteSaving } = useSavings()
+    const { savingsOrCashOuts, addSaving, updateSaving, deleteSaving } = useSavings()
+    const { startDate, endDate } = useTimePeriod()
     const [editingSaving, setEditingSaving] = useState<Saving | null>(null)
+
+    const filteredSavings = savingsOrCashOuts.filter(saving => {
+        const savingDate = new Date(saving.date)
+        return savingDate >= startDate && savingDate <= endDate
+    })
+
+    const currentSavings = filteredSavings.reduce((sum, saving) => sum + saving.amount, 0)
+    const periodTotalSavings = filteredSavings
+        .filter(saving => saving.amount > 0)
+        .reduce((sum, saving) => sum + saving.amount, 0)
+
+    const periodTotalCashOut = filteredSavings
+        .filter(saving => saving.amount < 0)
+        .reduce((sum, saving) => sum + saving.amount, 0)
 
     const handleSavingSubmit = async (transaction: PiggyBankTransaction) => {
         try {
@@ -87,16 +102,42 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
             <div className='flex justify-start'>
                 <TimePeriodSelector dateFormat={dateFormat} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-full">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
                             <PiggyBank className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Savings</h2>
+                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Saving</h2>
                             <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                                ${totalSavings.toFixed(2)}
+                                ${periodTotalSavings.toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-full">
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                            <PiggyBank className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Current Savings</h2>
+                            <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                                ${currentSavings.toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-full">
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                            <PiggyBank className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Cashout</h2>
+                            <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                                ${Math.abs(periodTotalCashOut).toFixed(2)}
                             </p>
                         </div>
                     </div>
@@ -204,7 +245,7 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
             </div>
 
             <SavingTable
-                savings={savings}
+                savings={filteredSavings}
                 onEdit={handleEditSaving}
                 onDelete={handleDeleteSaving}
             />

@@ -86,12 +86,12 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
         {
             if (filter.StartDate.HasValue)
             {
-                query = query.Where(t => t.TransactionDate >= DateOnly.FromDateTime(filter.StartDate.Value));
+                query = query.Where(t => t.TransactionDate >= filter.StartDate.Value);
             }
 
             if (filter.EndDate.HasValue)
             {
-                query = query.Where(t => t.TransactionDate <= DateOnly.FromDateTime(filter.EndDate.Value.Date.AddDays(1)));
+                query = query.Where(t => t.TransactionDate <= filter.EndDate.Value.Date.AddDays(1));
             }
         }
 

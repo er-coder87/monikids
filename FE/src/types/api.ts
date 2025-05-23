@@ -7,6 +7,7 @@ export interface ApiTransaction {
     categoryId: number | null
     description: string
     category: string | null
+    type: string | null
 }
 
 export interface ApiResponse {

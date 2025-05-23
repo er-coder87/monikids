@@ -6,6 +6,8 @@ interface TimePeriodContextType {
     currentMonth: Date
     setSelectedPeriod: (period: Period) => void
     setCurrentMonth: (month: Date) => void
+    startDate: Date
+    endDate: Date
 }
 
 const TimePeriodContext = createContext<TimePeriodContextType | undefined>(undefined)
@@ -25,6 +27,35 @@ export function TimePeriodProvider({ children }: TimePeriodProviderProps) {
         return saved ? new Date(saved) : new Date()
     })
 
+    const getDateRange = () => {
+        const start = new Date(currentMonth)
+        const end = new Date(currentMonth)
+
+        switch (selectedPeriod) {
+            case 'monthly':
+                start.setDate(1)
+                end.setMonth(end.getMonth() + 1)
+                end.setDate(0)
+                break
+            case 'yearly':
+                start.setMonth(0)
+                start.setDate(1)
+                end.setMonth(11)
+                end.setDate(31)
+                break
+            default:
+                // For 'all' period, use the entire year
+                start.setMonth(0)
+                start.setDate(1)
+                end.setMonth(11)
+                end.setDate(31)
+        }
+
+        return { start, end }
+    }
+
+    const { start: startDate, end: endDate } = getDateRange()
+
     useEffect(() => {
         localStorage.setItem('selectedPeriod', selectedPeriod)
     }, [selectedPeriod])
@@ -39,7 +70,9 @@ export function TimePeriodProvider({ children }: TimePeriodProviderProps) {
                 selectedPeriod,
                 currentMonth,
                 setSelectedPeriod,
-                setCurrentMonth
+                setCurrentMonth,
+                startDate,
+                endDate
             }}
         >
             {children}

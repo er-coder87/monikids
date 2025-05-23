@@ -13,8 +13,7 @@ interface Saving {
 }
 
 interface SavingsContextType {
-    savings: Saving[]
-    totalSavings: number
+    savingsOrCashOuts: Saving[]
     addSaving: (saving: Omit<Saving, 'id'>) => Promise<void>
     updateSaving: (saving: Saving) => Promise<void>
     deleteSaving: (id: string) => Promise<void>
@@ -34,8 +33,7 @@ const transformApiTransaction = (transaction: ApiTransaction): Saving => ({
 const SavingsContext = createContext<SavingsContextType | undefined>(undefined)
 
 export function SavingsProvider({ children }: { children: ReactNode }) {
-    const [savings, setSavings] = useState<Saving[]>([])
-    const [totalSavings, setTotalSavings] = useState(0)
+    const [savingsOrCashOuts, setSavingsOrCashOuts] = useState<Saving[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const { isAuthenticated, isLoading: isAuthLoading } = useUser()
 
@@ -44,15 +42,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
 
         setIsLoading(true)
         try {
-            const response = await apiClient.get<{ message: string, transactions: ApiTransaction[] }>('/transactions')
+            const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions')
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
 
-            const transactions = response.data.transactions
+            const savingsOrCashOuts = response.data.transactions
+                .filter(transaction => transaction.type == 'saving' || transaction.type == 'cash_out')
                 .map(transformApiTransaction)
-                .filter(saving => saving.amount > 0)
-            setSavings(transactions)
-            setTotalSavings(transactions.reduce((sum, saving) => sum + saving.amount, 0))
+            setSavingsOrCashOuts(savingsOrCashOuts)
         } catch (error) {
             throw error
         } finally {
@@ -71,7 +68,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         try {
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 ...saving,
-                category: 'Savings', // Mark as savings transaction
+                type: 'saving', // Mark as savings transaction
                 transactionDate: saving.date.toISOString().split('T')[0]
             })
 
@@ -79,8 +76,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             if (!response.data) throw new Error('No data received')
 
             const newSaving = transformApiTransaction(response.data.transaction)
-            setSavings(prev => [...prev, newSaving])
-            setTotalSavings(prev => prev + saving.amount)
+            setSavingsOrCashOuts(prev => [...prev, newSaving])
         } catch (error) {
             console.error('Error adding saving:', error)
             throw error
@@ -99,49 +95,47 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             if (!response.data) throw new Error('No data received')
 
             const updatedData = transformApiTransaction(response.data.transaction)
-            setSavings(prev => prev.map(saving =>
+            setSavingsOrCashOuts(prev => prev.map(saving =>
                 saving.id === updatedSaving.id ? updatedData : saving
             ))
-            const newTotal = savings.reduce((sum, saving) =>
+            const newTotal = savingsOrCashOuts.reduce((sum, saving) =>
                 saving.id === updatedSaving.id ? sum + updatedData.amount : sum + saving.amount, 0)
-            setTotalSavings(newTotal)
         } catch (error) {
             console.error('Error updating saving:', error)
             throw error
         }
-    }, [savings])
+    }, [savingsOrCashOuts])
 
     const deleteSaving = useCallback(async (id: string) => {
         try {
             const response = await apiClient.delete(`/transactions/${id}`)
             if (response.error) throw new Error(response.error)
 
-            const saving = savings.find(s => s.id === id)
+            const saving = savingsOrCashOuts.find(s => s.id === id)
             if (saving) {
-                setTotalSavings(prev => prev - saving.amount)
-                setSavings(prev => prev.filter(s => s.id !== id))
+                setSavingsOrCashOuts(prev => prev.filter(s => s.id !== id))
             }
         } catch (error) {
             console.error('Error deleting saving:', error)
             throw error
         }
-    }, [savings])
+    }, [savingsOrCashOuts])
 
     const withdraw = useCallback(async (amount: number) => {
         try {
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 amount: -amount, // Negative amount for withdrawal
                 description: 'Cash out',
-                category: 'Savings',
-                transactionDate: new Date().toISOString().split('T')[0]
+                type: 'cash_out',
+                transactionDate: new Date().toISOString(),
+                date: new Date().toISOString()
             })
 
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
 
             const newSaving = transformApiTransaction(response.data.transaction)
-            setSavings(prev => [...prev, newSaving])
-            setTotalSavings(prev => prev - amount)
+            setSavingsOrCashOuts(prev => [...prev, newSaving])
         } catch (error) {
             console.error('Error withdrawing money:', error)
             throw error
@@ -149,7 +143,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     }, [])
 
     return (
-        <SavingsContext.Provider value={{ savings, totalSavings, addSaving, updateSaving, deleteSaving, withdraw, isLoading }}>
+        <SavingsContext.Provider value={{ savingsOrCashOuts, addSaving, updateSaving, deleteSaving, withdraw, isLoading }}>
             {children}
         </SavingsContext.Provider>
     )

@@ -145,7 +145,12 @@ public partial class PostgresContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.TransactionDate).HasColumnName("transactionDate");
+            entity.Property(e => e.TransactionDate)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("transactionDate");
+            entity.Property(e => e.Type)
+                .HasColumnType("character varying")
+                .HasColumnName("type");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Transactions)

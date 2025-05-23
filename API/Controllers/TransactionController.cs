@@ -23,7 +23,7 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
             var userId = User.GetUserId();
             var transactions = await transactionRepository.GetTransactionsAsync(userId, filter);
             var transactionDtos = TransactionMapper.ToDtoList(transactions);
-            return Ok(new { Message = "Transactions retrieved successfully", Transactions = transactionDtos});
+            return Ok(new { Transactions = transactionDtos});
         }
         catch (Exception ex)
         {
@@ -63,8 +63,9 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
             var transaction = new Transaction
             {
                 UserId = userId,
-                TransactionDate = DateOnly.FromDateTime(request.Date),
+                TransactionDate = request.Date,
                 Description = request.Description,
+                Type = request.Type,
                 Amount = request.Amount,
             };
         

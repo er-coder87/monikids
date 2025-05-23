@@ -34,7 +34,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
         setIsLoading(true)
         try {
-            const response = await apiClient.get<{ message: string, transactions: ApiTransaction[] }>('/transactions')
+            const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions')
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
 
@@ -64,6 +64,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             const adjustedExpense = {
                 ...expense,
                 amount: -Math.abs(expense.amount),
+                type: 'expense'
             };
 
             const response = await apiClient.post<ApiResponse>('/transactions', adjustedExpense)
