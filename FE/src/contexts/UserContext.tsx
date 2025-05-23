@@ -68,6 +68,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(false)
     } catch (error) {
       console.error('Logout error:', error)
+      // Even if the logout request fails, we should still clear the local state
+      setUser(null)
+      setIsAuthenticated(false)
     }
   }
 
@@ -75,12 +78,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const response = await apiClient.validateToken<ValidateTokenResponse>()
 
-      if (response.error) throw new Error(response.error)
+      if (response.error) {
+        if (response.error.includes('401')) {
+          setUser(null)
+          setIsAuthenticated(false)
+          return
+        }
+        throw new Error(response.error)
+      }
+
       if (response.data?.user) {
         setUser(response.data.user)
         setIsAuthenticated(true)
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
       }
     } catch (error) {
+      console.error('Token validation error:', error)
       setUser(null)
       setIsAuthenticated(false)
     } finally {

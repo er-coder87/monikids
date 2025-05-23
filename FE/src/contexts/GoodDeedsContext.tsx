@@ -43,14 +43,21 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
         setIsLoading(true)
         try {
             const response = await apiClient.get<{ goodDeeds: GoodDeedDto }>('/good-deeds')
-            if (response.error) throw new Error(response.error)
+            if (response.error) {
+                if (response.error.includes('401')) {
+                    // Don't show error toast for 401, just return
+                    return
+                }
+                throw new Error(response.error)
+            }
             if (!response.data) throw new Error('No data received')
 
             setGoodDeed(response.data.goodDeeds)
         } catch (error) {
             console.error('Error fetching good deed:', error)
-            addToast('Failed to fetch good deed', 'error')
-            throw error
+            if (!(error instanceof Error && error.message.includes('401'))) {
+                addToast('Failed to fetch good deed', 'error')
+            }
         } finally {
             setIsLoading(false)
         }
@@ -68,6 +75,9 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
             const response = await apiClient.put<{ goodDeeds: GoodDeedDto }>(`/good-deeds`, request)
 
             if (response.error) {
+                if (response.error.includes('401')) {
+                    throw new Error('Unauthorized')
+                }
                 throw new Error(response.error)
             }
 

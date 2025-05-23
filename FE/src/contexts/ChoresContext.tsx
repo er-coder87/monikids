@@ -40,15 +40,20 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
     const [chores, setChores] = useState<ChoreDto[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const { addToast } = useToast()
-    const { isAuthenticated } = useUser()
+    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
 
     const fetchChores = useCallback(async () => {
+        if (!isAuthenticated || isAuthLoading) return
+
         setIsLoading(true)
         try {
             const response = await apiClient.get<ChoreDto[]>('/chores')
 
-            console.log("response.data", response.data)
             if (response.error) {
+                if (response.error.includes('401')) {
+                    // Don't show error toast for 401, just return
+                    return
+                }
                 throw new Error(response.error)
             }
 
@@ -59,17 +64,19 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             setChores(response.data)
         } catch (error) {
             console.error('Error fetching chores:', error)
-            addToast('Failed to fetch chores', 'error')
+            if (!(error instanceof Error && error.message.includes('401'))) {
+                addToast('Failed to fetch chores', 'error')
+            }
         } finally {
             setIsLoading(false)
         }
-    }, [addToast])
+    }, [isAuthenticated, isAuthLoading, addToast])
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && !isAuthLoading) {
             fetchChores()
         }
-    }, [isAuthenticated, fetchChores])
+    }, [isAuthenticated, isAuthLoading, fetchChores])
 
     const addChore = useCallback(async (chore: CreateChoreRequest) => {
         setIsLoading(true)
