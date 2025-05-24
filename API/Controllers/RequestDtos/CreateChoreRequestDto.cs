@@ -6,5 +6,4 @@ public class CreateChoreRequestDto
     public int MaxCount { get; set; }
     public int CurrentCount { get; set; }
     public decimal AllowanceAmount { get; set; }
-    public DateTime? CompleteDateTime { get; set; }
 }

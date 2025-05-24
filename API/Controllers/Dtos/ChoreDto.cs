@@ -8,5 +8,7 @@ public class ChoreDto
     public int? MaxCount { get; set; }
     public int? CurrentCount { get; set; }
     public decimal? AllowanceAmount { get; set; }
-    public DateOnly? CompleteDateTime { get; set; }
+    public DateTime? PaidAtDateTime { get; set; }
+    public DateTime? DoneDateTime { get; set; }
+    public DateTime CreatedDateTime { get; set; }
 }

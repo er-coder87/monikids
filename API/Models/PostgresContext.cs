@@ -101,13 +101,14 @@ public partial class PostgresContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AllowanceAmount).HasColumnName("allowance_amount");
-            entity.Property(e => e.CompletedAt).HasColumnName("completed_at");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.CurrentCount).HasColumnName("current_count");
             entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.DoneAt).HasColumnName("done_at");
             entity.Property(e => e.MaxCount).HasColumnName("max_count");
+            entity.Property(e => e.PaidAt).HasColumnName("paid_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.Chores)
@@ -145,9 +146,7 @@ public partial class PostgresContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.TransactionDate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("transactionDate");
+            entity.Property(e => e.TransactionDate).HasColumnName("transactionDate");
             entity.Property(e => e.Type)
                 .HasColumnType("character varying")
                 .HasColumnName("type");

@@ -180,8 +180,8 @@ const Dashboard = () => {
               <TabButton tab="piggy-bank" icon={PiggyBank} label="Piggy Bank" />
               <TabButton tab="chores" icon={LayoutDashboard} label="Chores" />
               <TabButton tab="savings" icon={DollarSign} label="Savings" />
-              <TabButton tab="expenses" icon={LayoutDashboard} label="Expenses" />
-              <TabButton tab="dashboard" icon={Home} label="Dashboard" />
+              {/* <TabButton tab="expenses" icon={LayoutDashboard} label="Expenses" /> */}
+              {/* <TabButton tab="dashboard" icon={Home} label="Dashboard" /> */}
             </div>
           </div>
 

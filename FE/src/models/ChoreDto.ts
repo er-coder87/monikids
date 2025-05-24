@@ -4,5 +4,7 @@ export interface ChoreDto {
     maxCount: number | null
     currentCount: number | null
     allowanceAmount: number | null
-    completeDateTime: string | null
+    paidAtDateTime: string | null
+    doneDateTime: string | null
+    createdDateTime: string
 } 

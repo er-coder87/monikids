@@ -16,7 +16,9 @@ public static class ChoreMapper
             AllowanceAmount = chore.AllowanceAmount,
             MaxCount = (int?)chore.MaxCount,
             CurrentCount = (int?)chore.CurrentCount,
-            CompleteDateTime = chore.CompletedAt
+            PaidAtDateTime = chore.PaidAt,
+            DoneDateTime = chore.DoneAt,
+            CreatedDateTime = chore.CreatedAt,
         };
     }
 
@@ -38,16 +40,17 @@ public static class ChoreMapper
         };
     }
     
-    public static Chore ToEntity(this UpdateChoreRequestDto request, long userId)
+    public static Chore ToEntity(this UpdateChoreRequestDto request, long choreId)
     {
         return new Chore
         {
-            UserId = userId,
+            Id = choreId,
             Description = request.Description,
             AllowanceAmount = request.AllowanceAmount,
             MaxCount = request.MaxCount,
-            CurrentCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CurrentCount = request.CurrentCount,
+            PaidAt = request.PaidAtDateTime,
+            DoneAt = request.DoneDateTime,
         };
     }
 }

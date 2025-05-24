@@ -1,15 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
 import { useUser } from './UserContext'
-
-interface ChoreDto {
-    id: number
-    description: string | null
-    maxCount: number | null
-    currentCount: number | null
-    allowanceAmount: number | null
-    completeDateTime: string | null
-}
+import { ChoreDto } from '../models/ChoreDto'
 
 interface CreateChoreRequest {
     description: string
@@ -20,11 +12,8 @@ interface CreateChoreRequest {
 
 interface ChoresContextType {
     chores: ChoreDto[]
-    setChores: (chores: ChoreDto[]) => void
     addChore: (chore: CreateChoreRequest) => Promise<void>
-    updateChore: (choreId: number, updates: Partial<ChoreDto>) => Promise<void>
-    deleteChore: (choreId: number) => Promise<void>
-    completeChore: (choreId: number) => Promise<void>
+    updateChore: (choreId: number, updates: ChoreDto) => Promise<void>
     isLoading: boolean
 }
 
@@ -82,6 +71,8 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
                 throw new Error('No data received')
             }
 
+            console.log("response.data", response.data)
+
             setChores(prev => [...prev, response.data as ChoreDto])
         } catch (error) {
             console.error('Error adding chore:', error)
@@ -91,7 +82,7 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
         }
     }
 
-    const updateChore = async (choreId: number, updates: Partial<ChoreDto>) => {
+    const updateChore = async (choreId: number, updates: ChoreDto) => {
         setIsLoading(true)
         try {
             const response = await apiClient.put<ChoreDto>(`/chores/${choreId}`, updates)
@@ -115,56 +106,11 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
         }
     }
 
-    const deleteChore = async (choreId: number) => {
-        setIsLoading(true)
-        try {
-            const response = await apiClient.delete(`/chores/${choreId}`)
-
-            if (response.error) {
-                throw new Error(response.error)
-            }
-
-            setChores(prev => prev.filter(chore => chore.id !== choreId))
-        } catch (error) {
-            console.error('Error deleting chore:', error)
-            throw error
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const completeChore = async (choreId: number) => {
-        setIsLoading(true)
-        try {
-            const response = await apiClient.put<ChoreDto>(`/chores/${choreId}/complete`, {})
-
-            if (response.error) {
-                throw new Error(response.error)
-            }
-
-            if (!response.data) {
-                throw new Error('No data received')
-            }
-
-            setChores(prev => prev.map(chore =>
-                chore.id === choreId ? (response.data as ChoreDto) : chore
-            ))
-        } catch (error) {
-            console.error('Error completing chore:', error)
-            throw error
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     return (
         <ChoresContext.Provider value={{
             chores,
-            setChores,
             addChore,
             updateChore,
-            deleteChore,
-            completeChore,
             isLoading
         }}>
             {children}

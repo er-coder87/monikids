@@ -37,7 +37,7 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
         {
             var userId = User.GetUserId();
             var chore = await choreService.CreateChoreAsync(userId, request);
-            return Ok(new { Chores = chore});
+            return Ok(chore);
         }
         catch (ArgumentException ex)
         {

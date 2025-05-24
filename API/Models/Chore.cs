@@ -19,7 +19,9 @@ public partial class Chore
 
     public long UserId { get; set; }
 
-    public DateOnly? CompletedAt { get; set; }
+    public DateTime? PaidAt { get; set; }
+
+    public DateTime? DoneAt { get; set; }
 
     public virtual User User { get; set; } = null!;
 }

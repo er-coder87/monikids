@@ -50,7 +50,8 @@ public class ChoreRepository(PostgresContext context, ILogger<ChoreRepository> l
         existingChore.AllowanceAmount = chore.AllowanceAmount;
         existingChore.MaxCount = chore.MaxCount;
         existingChore.CurrentCount = chore.CurrentCount;
-        existingChore.CompletedAt = chore.CompletedAt;
+        existingChore.PaidAt = chore.PaidAt;
+        existingChore.DoneAt = chore.DoneAt;;
 
         try
         {

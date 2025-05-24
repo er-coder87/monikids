@@ -71,13 +71,7 @@ public class ChoreService : IChoreService
     {
         try
         {
-            var existingChore = await _choreRepository.GetChoreByIdAsync(userId, choreId);
-            if (existingChore == null)
-            {
-                return null;
-            }
-
-            var chore = request.ToEntity(userId);
+            var chore = request.ToEntity(choreId);
             var updatedChore = await _choreRepository.UpdateChoreAsync(userId, chore);
             return updatedChore?.ToDto();
         }

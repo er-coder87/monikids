@@ -1,105 +1,8 @@
-import { Check, DollarSign, Heart, ListChecks, Trash2, Star } from "lucide-react"
+import { Heart, ListChecks, DollarSign } from "lucide-react"
 import { useState } from "react"
-import { useSavings } from "../../contexts/SavingsContext"
-import { useToast } from "../../contexts/ToastContext"
 import { useGoodDeeds } from "../../contexts/GoodDeedsContext"
 import { useChores } from "../../contexts/ChoresContext"
-import { ChoreDto } from "../../models/ChoreDto"
-
-interface ChoreCardProps {
-    chore: ChoreDto
-    onComplete: (chore: ChoreDto) => Promise<void>
-    onDelete: (choreId: number) => Promise<void>
-    onAddSaving: (chore: ChoreDto) => Promise<void>
-}
-
-function ChoreCard({ chore, onComplete, onDelete, onAddSaving }: ChoreCardProps) {
-    const progress = (chore.currentCount ?? 0) / (chore.maxCount ?? 1)
-    const isCompleted = (chore.currentCount ?? 0) >= (chore.maxCount ?? 0)
-    const isPaid = !!chore.completeDateTime
-
-    return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-            <div className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
-                            {chore.description}
-                        </h3>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            <DollarSign className="h-4 w-4" />
-                            <span>${chore.allowanceAmount?.toFixed(2)}</span>
-                            <span>•</span>
-                            <span>{chore.currentCount ?? 0}/{chore.maxCount ?? 0} completed</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {isCompleted ? (
-                            isPaid ? (
-                                <button
-                                    onClick={() => onDelete(chore.id)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-900/30"
-                                >
-                                    <Check className="h-4 w-4" />
-                                    <span>Completed</span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => onAddSaving(chore)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
-                                >
-                                    <DollarSign className="h-4 w-4" />
-                                    <span>Add Saving</span>
-                                </button>
-                            )
-                        ) : (
-                            <button
-                                onClick={() => onDelete(chore.id)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                <span>Delete</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">
-                            Progress
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-400">
-                            {Math.round(progress * 100)}%
-                        </span>
-                    </div>
-
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                            className="h-2 rounded-full transition-all duration-300"
-                            style={{
-                                width: `${progress * 100}%`,
-                                backgroundColor: isCompleted ? '#059669' : '#2563eb'
-                            }}
-                        />
-                    </div>
-
-                    {!isCompleted && (
-                        <button
-                            onClick={() => onComplete(chore)}
-                            className="w-full mt-3 py-2 px-4 rounded-md text-sm font-medium transition-colors
-                                bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                                flex items-center justify-center gap-2"
-                        >
-                            <Star className="h-4 w-4" />
-                            <span>I Did It!</span>
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
-}
+import { ChoreCard } from "../../components/ChoreCard"
 
 export function ChoresTab() {
     const [choreData, setChoreData] = useState({
@@ -108,33 +11,8 @@ export function ChoresTab() {
         savingAmount: 0
     })
     const { goodDeed, setGoodDeed, updateGoodDeed, isLoading: isGoodDeedsLoading } = useGoodDeeds()
-    const { chores, addChore, updateChore, deleteChore, completeChore, isLoading: isChoresLoading } = useChores()
+    const { chores, addChore, isLoading: isChoresLoading } = useChores()
     const [hasStampChanges, setHasStampChanges] = useState(false)
-    const { addSaving } = useSavings()
-    const { addToast } = useToast()
-
-    const handleAddSaving = async (chore: ChoreDto) => {
-        const today = new Date()
-        const formattedDate = today.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        })
-
-        addSaving({
-            description: `Done ${chore.description} on ${formattedDate}`,
-            amount: chore.allowanceAmount ?? 0,
-            date: today,
-            isRecurring: false,
-        })
-
-        try {
-            await updateChore(chore.id, { completeDateTime: today.toISOString() })
-            addToast(`Added saving $${chore.allowanceAmount} for ${chore.description}`)
-        } catch (error) {
-            console.error('Error updating chore:', error)
-        }
-    }
 
     const handleChoreSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -183,19 +61,8 @@ export function ChoresTab() {
                 currentCount: goodDeed.currentCount ?? undefined
             })
             setHasStampChanges(false)
-            addToast('Good deeds saved successfully')
         } catch (error) {
             console.error('Error saving good deeds:', error)
-            addToast('Failed to save good deeds', 'error')
-        }
-    }
-
-    const handleDeleteByCompletionChore = async (choreId: number) => {
-        try {
-            await deleteChore(choreId)
-            addToast('Completed house chore')
-        } catch (error) {
-            console.error('Error deleting chore:', error)
         }
     }
 
@@ -391,15 +258,15 @@ export function ChoresTab() {
 
                 {chores.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {chores.map(chore => (
-                            <ChoreCard
-                                key={chore.id}
-                                chore={chore}
-                                onComplete={completeChore}
-                                onDelete={deleteChore}
-                                onAddSaving={handleAddSaving}
-                            />
-                        ))}
+                        {[...chores]
+                            .filter(chore => !chore.doneDateTime)
+                            .sort((a, b) => new Date(b.createdDateTime).getTime() - new Date(a.createdDateTime).getTime())
+                            .map(chore => (
+                                <ChoreCard
+                                    key={chore.id}
+                                    chore={chore}
+                                />
+                            ))}
                     </div>
                 ) : (
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
