@@ -76,7 +76,6 @@ class ApiClient {
     }
 
     async logout(): Promise<ApiResponse<void>> {
-        deleteCookie('XSRF-TOKEN')
         this.csrfToken = null
         return this.request<void>('/auth/logout', { method: 'POST' })
     }

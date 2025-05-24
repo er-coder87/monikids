@@ -78,31 +78,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const response = await apiClient.validateToken<ValidateTokenResponse>()
 
-      if (response.error) {
-        if (response.error.includes('401')) {
-          setUser(null)
-          setIsAuthenticated(false)
-          return
-        }
-        throw new Error(response.error)
-      }
-
-      if (response.data?.user) {
-        setUser(response.data.user)
-        setIsAuthenticated(true)
-      } else {
+      if (response.data?.user == null) {
         setUser(null)
         setIsAuthenticated(false)
+        return
       }
-    } catch (error) {
-      console.error('Token validation error:', error)
+
+      setUser(response.data.user)
+      setIsAuthenticated(true)
+
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setUser(null)
+        setIsAuthenticated(false)
+        return
+      }
       setUser(null)
       setIsAuthenticated(false)
     } finally {
       setIsLoading(false)
     }
   }
-
   useEffect(() => {
     validateToken()
   }, [])

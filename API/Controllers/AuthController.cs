@@ -19,10 +19,9 @@ namespace ExpenseTrackerApi.Controllers
     public class AuthController(IConfiguration configuration, IUserService userService) : ControllerBase
     {
         [HttpPost("validate-token")]
-        [Authorize(AuthenticationSchemes = "Bearer")] 
+        [Authorize] 
         public IActionResult ValidateToken()
         {
-            var user = User.Identity?.Name;
             return Ok(new { 
                 user = new { 
                     id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
@@ -30,6 +29,13 @@ namespace ExpenseTrackerApi.Controllers
                     name = User.FindFirst(ClaimTypes.Name)?.Value
                 } 
             });
+        }
+        
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            Response.Cookies.Delete("jwt");
+            return Ok();
         }
         
         // TODO - block signup until authz is implemented
@@ -81,7 +87,7 @@ namespace ExpenseTrackerApi.Controllers
 
             var token = GenerateJwtToken(user);
             
-            Response.Cookies.Append("auth", token, new CookieOptions
+            Response.Cookies.Append("jwt", token, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,                
