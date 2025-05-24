@@ -14,12 +14,16 @@ export function ChoreCard({ chore }: ChoreCardProps) {
     const { addSaving } = useSavings()
     const { addToast } = useToast()
     const [isFlicking, setIsFlicking] = useState(false)
+    const [isUpdating, setIsUpdating] = useState(false)
 
     const progress = (chore.currentCount ?? 0) / (chore.maxCount ?? 1)
     const isCompleted = (chore.currentCount ?? 0) >= (chore.maxCount ?? 0)
     const isPaid = !!chore.paidAtDateTime
 
     const handleAddSaving = async () => {
+        if (isUpdating) return
+        setIsUpdating(true)
+
         const today = new Date()
         const formattedDate = today.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -27,57 +31,76 @@ export function ChoreCard({ chore }: ChoreCardProps) {
             day: 'numeric'
         })
 
-        addSaving({
-            description: `Done ${chore.description} on ${formattedDate}`,
-            amount: chore.allowanceAmount ?? 0,
-            date: today,
-            isRecurring: false,
-        })
-
         try {
+            // Optimistically update the UI
             await updateChore(chore.id, {
                 ...chore,
                 paidAtDateTime: today.toISOString()
             })
+
+            addSaving({
+                description: `Done ${chore.description} on ${formattedDate}`,
+                amount: chore.allowanceAmount ?? 0,
+                date: today,
+                isRecurring: false,
+            })
+
             addToast(`Added saving $${chore.allowanceAmount} for ${chore.description}`)
         } catch (error) {
             console.error('Error updating chore:', error)
+            addToast('Failed to update chore', 'error')
+        } finally {
+            setIsUpdating(false)
         }
     }
 
     const handleComplete = async () => {
+        if (isUpdating) return
+        setIsUpdating(true)
+
         try {
-            await updateChore(chore.id, {
-                ...chore,
-                currentCount: (chore.currentCount ?? 0) + 1
-            })
-            addToast(`Completed ${chore.description}`)
+            const newCount = (chore.currentCount ?? 0) + 1
+            if (chore.maxCount) {
+                await updateChore(chore.id, {
+                    ...chore,
+                    currentCount: newCount,
+                    doneDateTime: newCount === chore.maxCount ? new Date().toISOString() : null
+                })
+                addToast(`Completed ${chore.description}`)
+            }
         } catch (error) {
             console.error('Error completing chore:', error)
+            addToast('Failed to complete chore', 'error')
+        } finally {
+            setIsUpdating(false)
         }
     }
 
     const handleDelete = async () => {
+        if (isUpdating) return
+        setIsUpdating(true)
         setIsFlicking(true)
 
-        // Wait for animation to complete
+        // Wait for animation to complete before updating
         setTimeout(async () => {
-            const today = new Date()
             try {
                 await updateChore(chore.id, {
                     ...chore,
-                    doneDateTime: today.toISOString()
+                    isDeleted: true
                 })
-                addToast(`Marked ${chore.description} as done`)
             } catch (error) {
                 console.error('Error marking chore as done:', error)
+                addToast('Failed to mark chore as done', 'error')
+                setIsFlicking(false)
+            } finally {
+                setIsUpdating(false)
             }
-        }, 1000)
+        }, 1000) // Match this with the CSS transition duration
     }
 
     return (
         <div
-            className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-1000
+            className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-1000 ease-in-out
                 ${isFlicking ? 'transform translate-x-[200%] rotate-[360deg] opacity-0 scale-75' : ''}`}
         >
             <div className="p-4">
@@ -97,14 +120,16 @@ export function ChoreCard({ chore }: ChoreCardProps) {
                             isPaid ? (
                                 <button
                                     onClick={handleDelete}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-900/30"
+                                    disabled={isUpdating}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors rounded-md hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <span>All Done!</span>
                                 </button>
                             ) : (
                                 <button
                                     onClick={handleAddSaving}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                                    disabled={isUpdating}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <DollarSign className="h-4 w-4" />
                                     <span>Add Saving</span>
@@ -113,7 +138,8 @@ export function ChoreCard({ chore }: ChoreCardProps) {
                         ) : (
                             <button
                                 onClick={handleDelete}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
+                                disabled={isUpdating}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Trash2 className="h-4 w-4" />
                                 <span>Delete</span>
@@ -145,9 +171,10 @@ export function ChoreCard({ chore }: ChoreCardProps) {
                     {!isCompleted && (
                         <button
                             onClick={handleComplete}
+                            disabled={isUpdating}
                             className="w-full mt-3 py-2 px-4 rounded-md text-sm font-medium transition-colors
                                 bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                                flex items-center justify-center gap-2"
+                                flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Star className="h-4 w-4" />
                             <span>I Did It!</span>

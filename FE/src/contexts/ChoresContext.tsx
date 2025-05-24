@@ -71,8 +71,6 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
                 throw new Error('No data received')
             }
 
-            console.log("response.data", response.data)
-
             setChores(prev => [...prev, response.data as ChoreDto])
         } catch (error) {
             console.error('Error adding chore:', error)
@@ -83,11 +81,19 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
     }
 
     const updateChore = async (choreId: number, updates: ChoreDto) => {
-        setIsLoading(true)
+        // Optimistically update the UI
+        setChores(prev => prev.map(chore =>
+            chore.id === choreId ? { ...chore, ...updates } : chore
+        ))
+
         try {
             const response = await apiClient.put<ChoreDto>(`/chores/${choreId}`, updates)
 
             if (response.error) {
+                // Revert the optimistic update on error
+                setChores(prev => prev.map(chore =>
+                    chore.id === choreId ? { ...chore, ...updates } : chore
+                ))
                 throw new Error(response.error)
             }
 
@@ -95,14 +101,13 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
                 throw new Error('No data received')
             }
 
+            // Update with server response
             setChores(prev => prev.map(chore =>
                 chore.id === choreId ? (response.data as ChoreDto) : chore
             ))
         } catch (error) {
             console.error('Error updating chore:', error)
             throw error
-        } finally {
-            setIsLoading(false)
         }
     }
 

@@ -107,6 +107,7 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.CurrentCount).HasColumnName("current_count");
             entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.DoneAt).HasColumnName("done_at");
+            entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
             entity.Property(e => e.MaxCount).HasColumnName("max_count");
             entity.Property(e => e.PaidAt).HasColumnName("paid_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");

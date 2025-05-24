@@ -52,6 +52,7 @@ public class ChoreRepository(PostgresContext context, ILogger<ChoreRepository> l
         existingChore.CurrentCount = chore.CurrentCount;
         existingChore.PaidAt = chore.PaidAt;
         existingChore.DoneAt = chore.DoneAt;;
+        existingChore.IsDeleted = chore.IsDeleted;
 
         try
         {

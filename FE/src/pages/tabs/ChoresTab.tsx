@@ -259,7 +259,7 @@ export function ChoresTab() {
                 {chores.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[...chores]
-                            .filter(chore => !chore.doneDateTime)
+                            .filter(chore => !chore.isDeleted)
                             .sort((a, b) => new Date(b.createdDateTime).getTime() - new Date(a.createdDateTime).getTime())
                             .map(chore => (
                                 <ChoreCard

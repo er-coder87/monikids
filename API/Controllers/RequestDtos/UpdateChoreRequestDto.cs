@@ -8,4 +8,5 @@ public class UpdateChoreRequestDto
     public decimal AllowanceAmount { get; set; }
     public DateTime? PaidAtDateTime { get; set; }
     public DateTime? DoneDateTime { get; set; }
+    public bool? IsDeleted { get; set; }
 }

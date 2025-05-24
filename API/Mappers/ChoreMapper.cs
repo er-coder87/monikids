@@ -19,6 +19,7 @@ public static class ChoreMapper
             PaidAtDateTime = chore.PaidAt,
             DoneDateTime = chore.DoneAt,
             CreatedDateTime = chore.CreatedAt,
+            IsDeleted = chore.IsDeleted
         };
     }
 
@@ -51,6 +52,7 @@ public static class ChoreMapper
             CurrentCount = request.CurrentCount,
             PaidAt = request.PaidAtDateTime,
             DoneAt = request.DoneDateTime,
+            IsDeleted = request.IsDeleted
         };
     }
 }

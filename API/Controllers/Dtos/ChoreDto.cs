@@ -11,4 +11,5 @@ public class ChoreDto
     public DateTime? PaidAtDateTime { get; set; }
     public DateTime? DoneDateTime { get; set; }
     public DateTime CreatedDateTime { get; set; }
+    public bool? IsDeleted { get; set; }
 }

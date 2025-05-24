@@ -23,5 +23,7 @@ public partial class Chore
 
     public DateTime? DoneAt { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

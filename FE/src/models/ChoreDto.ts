@@ -7,4 +7,5 @@ export interface ChoreDto {
     paidAtDateTime: string | null
     doneDateTime: string | null
     createdDateTime: string
+    isDeleted: boolean | null
 } 
