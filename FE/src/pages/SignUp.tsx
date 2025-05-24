@@ -62,6 +62,8 @@ export default function SignUp() {
         onSuccess: async (tokenResponse) => {
             try {
                 // 1. Fetch user info using access_token
+
+                console.log('import.meta.env.VITE_GOOGLE_USERINFO_URL', import.meta.env.VITE_GOOGLE_USERINFO_URL)
                 const googleUser = await fetch(import.meta.env.VITE_GOOGLE_USERINFO_URL, {
                     headers: {
                         Authorization: `Bearer ${tokenResponse.access_token}`,
