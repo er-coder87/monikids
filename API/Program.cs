@@ -37,7 +37,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173","https://monikids.netlify.app") // Replace with your frontend's exact origin
+            builder.WithOrigins("https://localhost:5173","https://monikids.netlify.app","https://mango-meadow-09700a300.6.azurestaticapps.net") // Replace with your frontend's exact origin
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
