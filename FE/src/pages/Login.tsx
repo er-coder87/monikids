@@ -11,13 +11,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useUser();
-
+  console.log('import.meta.env.VITE_GOOGLE_USERINFO_URL1', import.meta.env.VITE_GOOGLE_USERINFO_URL)
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
         setIsLoading(true);
         setLoginError('');
-
+        console.log('import.meta.env.VITE_GOOGLE_USERINFO_URL2', import.meta.env.VITE_GOOGLE_USERINFO_URL)
         // 1. Fetch user info using access_token
         const googleUser = await fetch(import.meta.env.VITE_GOOGLE_USERINFO_URL, {
           headers: {
