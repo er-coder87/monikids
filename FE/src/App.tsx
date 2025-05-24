@@ -19,7 +19,7 @@ import { ChoresProvider } from './contexts/ChoresContext';
 function Home() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useUser();
-  console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+  console.log("VITE_API_URL :", import.meta.env.VITE_API_URL);
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Navigation Bar */}
