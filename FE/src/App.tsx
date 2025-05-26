@@ -2,23 +2,21 @@ import piggybankKids from './assets/kids-with-piggybanks.jpg';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { ArrowRight, PiggyBank, BookOpen, Sparkles, Shield, BarChart } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
 import UnauthorizedPage from './pages/UnauthorizedPage';
-import SignUp from './pages/SignUp';
 import LearnMore from './pages/LearnMore';
 import PrivacyPolicy from './pages/legal/privacy-policy';
 import TermsOfService from './pages/legal/terms-of-service';
 import { NavBar } from './components/NavBar';
 import { Footer } from './components/Footer';
-import { useUser, UserProvider } from './contexts/UserContext';
 import { TimePeriodProvider } from './contexts/TimePeriodContext';
 import { SavingsProvider } from './contexts/SavingsContext';
 import { GoodDeedsProvider } from './contexts/GoodDeedsContext';
 import { ChoresProvider } from './contexts/ChoresContext';
+import { PricingPage } from './pages/PricingPage';
+import { SuccessPage } from './pages/SuccessPage';
 
 function Home() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useUser();
   console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
@@ -37,7 +35,7 @@ function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <button
-                onClick={isAuthenticated ? () => navigate('/dashboard') : () => navigate('/login')}
+                onClick={() => navigate('pricing-page')}
                 className="px-8 py-4 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors inline-flex items-center justify-center group"
               >
                 Get Started
@@ -122,33 +120,31 @@ function Home() {
 
 function App() {
   return (
-    <UserProvider>
-      <TimePeriodProvider>
-        <SavingsProvider>
-          <GoodDeedsProvider>
-            <ChoresProvider>
-              <Router>
-                <div className="flex flex-col min-h-screen">
-                  <div className="flex-grow">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<SignUp />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/learn-more" element={<LearnMore />} />
-                      <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                      <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
-                      <Route path="/legal/terms-of-service" element={<TermsOfService />} />
-                    </Routes>
-                  </div>
-                  <Footer />
+    <TimePeriodProvider>
+      <SavingsProvider>
+        <GoodDeedsProvider>
+          <ChoresProvider>
+            <Router>
+              <div className="flex flex-col min-h-screen">
+                <div className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/learn-more" element={<LearnMore />} />
+                    <Route path="/pricing-page" element={<PricingPage />} />
+                    <Route path="/success" element={<SuccessPage />} />
+                    <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                    <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/legal/terms-of-service" element={<TermsOfService />} />
+                  </Routes>
                 </div>
-              </Router>
-            </ChoresProvider>
-          </GoodDeedsProvider>
-        </SavingsProvider>
-      </TimePeriodProvider>
-    </UserProvider>
+                <Footer />
+              </div>
+            </Router>
+          </ChoresProvider>
+        </GoodDeedsProvider>
+      </SavingsProvider>
+    </TimePeriodProvider>
   );
 }
 

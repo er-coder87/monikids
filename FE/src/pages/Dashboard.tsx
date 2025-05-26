@@ -1,7 +1,6 @@
 import { Sun, Moon, DollarSign, Cog, LayoutDashboard, Home, PiggyBank, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
 import useDarkMode from '../hooks/useDarkMode';
 import { ExportCsvModal } from '../modals/ExportCsvModal';
 import UnauthorizedPage from './UnauthorizedPage';
@@ -14,12 +13,18 @@ import { useTimePeriod } from '../contexts/TimePeriodContext';
 import { SavingsTab } from './tabs/SavingsTab';
 import { ChoresTab } from './tabs/ChoresTab';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useChores } from '../contexts/ChoresContext';
+import { useGoodDeeds } from '../contexts/GoodDeedsContext';
+import { fetchExpenses } from '../services/ExpenseApi';
+import { useExpenses } from '../contexts/ExpenseContext';
+import { useSavings } from '../contexts/SavingsContext';
 
 type Tab = 'dashboard' | 'piggy-bank' | 'chores' | 'savings' | 'expenses' | 'budget';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
-  const { isAuthenticated, isLoading: isAuthLoading, logout } = useUser();
+  const { isAuthenticated, isLoading: isAuthLoading, logout } = useAuth0();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTabsOpen, setIsTabsOpen] = useState(false);
@@ -28,13 +33,24 @@ const Dashboard = () => {
   const [dateFormat, setDateFormat] = useState<'dd-MM-yyyy' | 'yyyy-MM-dd'>('dd-MM-yyyy');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { selectedPeriod, currentMonth } = useTimePeriod();
-
-  const navigate = useNavigate();
+  const { fetchChores } = useChores();
+  const { fetchGoodDeed } = useGoodDeeds();
+  const { fetchExpense } = useExpenses();
+  const { fetchSaving } = useSavings();
 
   const openExportModal = () => {
     setIsSettingsOpen(false);
     setIsExportModalOpen(true);
   };
+
+  useEffect(() => {
+    if (isAuthenticated && !isAuthLoading) {
+      fetchChores()
+      fetchGoodDeed()
+      fetchExpense()
+      fetchSaving()
+    }
+  }, [isAuthenticated, isAuthLoading])
 
   useEffect(() => {
     if (darkMode) {

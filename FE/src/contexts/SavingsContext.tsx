@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
-import { useUser } from './UserContext'
+import { useAuth0 } from '@auth0/auth0-react'
 
 interface Saving {
     id: string
@@ -18,6 +18,7 @@ interface SavingsContextType {
     updateSaving: (saving: Saving) => Promise<void>
     deleteSaving: (id: string) => Promise<void>
     withdraw: (amount: number) => Promise<void>
+    fetchSaving: () => Promise<void>
     isLoading: boolean
 }
 
@@ -35,14 +36,15 @@ const SavingsContext = createContext<SavingsContextType | undefined>(undefined)
 export function SavingsProvider({ children }: { children: ReactNode }) {
     const [savingsOrCashOuts, setSavingsOrCashOuts] = useState<Saving[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
+    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
 
-    const refetch = async () => {
+    const fetchSaving = async () => {
         if (!isAuthenticated || isAuthLoading) return
 
         setIsLoading(true)
         try {
-            const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions')
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions', token)
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
 
@@ -57,20 +59,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Initial fetch when authenticated
-    useEffect(() => {
-        if (isAuthenticated && !isAuthLoading) {
-            refetch()
-        }
-    }, [isAuthenticated, isAuthLoading])
-
     const addSaving = useCallback(async (saving: Omit<Saving, 'id'>) => {
         try {
+            const token = await getAccessTokenSilently();
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 ...saving,
                 type: 'saving', // Mark as savings transaction
                 transactionDate: saving.date.toISOString().split('T')[0]
-            })
+            }, token)
 
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
@@ -85,11 +81,12 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
 
     const updateSaving = useCallback(async (updatedSaving: Saving) => {
         try {
+            const token = await getAccessTokenSilently();
             const response = await apiClient.put<ApiResponse>(`/transactions/${updatedSaving.id}`, {
                 ...updatedSaving,
                 category: 'Savings',
                 transactionDate: updatedSaving.date.toISOString().split('T')[0]
-            })
+            }, token)
 
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
@@ -108,7 +105,8 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
 
     const deleteSaving = useCallback(async (id: string) => {
         try {
-            const response = await apiClient.delete(`/transactions/${id}`)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.delete(`/transactions/${id}`, token)
             if (response.error) throw new Error(response.error)
 
             const saving = savingsOrCashOuts.find(s => s.id === id)
@@ -123,13 +121,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
 
     const withdraw = useCallback(async (amount: number) => {
         try {
+            const token = await getAccessTokenSilently();
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 amount: -amount, // Negative amount for withdrawal
                 description: 'Cash out',
                 type: 'cash_out',
                 transactionDate: new Date().toISOString(),
                 date: new Date().toISOString()
-            })
+            }, token)
 
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
@@ -143,7 +142,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
     }, [])
 
     return (
-        <SavingsContext.Provider value={{ savingsOrCashOuts, addSaving, updateSaving, deleteSaving, withdraw, isLoading }}>
+        <SavingsContext.Provider value={{ savingsOrCashOuts, addSaving, updateSaving, deleteSaving, withdraw, fetchSaving, isLoading }}>
             {children}
         </SavingsContext.Provider>
     )

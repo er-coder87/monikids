@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
-import { useUser } from './UserContext'
 import { ChoreDto } from '../models/ChoreDto'
+import { useAuth0 } from '@auth0/auth0-react'
 
 interface CreateChoreRequest {
     description: string
@@ -14,6 +14,7 @@ interface ChoresContextType {
     chores: ChoreDto[]
     addChore: (chore: CreateChoreRequest) => Promise<void>
     updateChore: (choreId: number, updates: ChoreDto) => Promise<void>
+    fetchChores: () => Promise<void>
     isLoading: boolean
 }
 
@@ -26,14 +27,15 @@ interface ChoresProviderProps {
 export function ChoresProvider({ children }: ChoresProviderProps) {
     const [chores, setChores] = useState<ChoreDto[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
+    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
 
     async function fetchChores() {
         if (!isAuthenticated || isAuthLoading) return
 
         setIsLoading(true)
         try {
-            const response = await apiClient.get<ChoreDto[]>('/chores')
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.get<ChoreDto[]>('/chores', token)
 
             if (response.error) {
                 if (response.error.startsWith('401:')) return
@@ -52,16 +54,11 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
         }
     }
 
-    useEffect(() => {
-        if (isAuthenticated && !isAuthLoading) {
-            fetchChores()
-        }
-    }, [isAuthenticated, isAuthLoading])
-
     const addChore = async (chore: CreateChoreRequest) => {
         setIsLoading(true)
         try {
-            const response = await apiClient.post<ChoreDto>('/chores', chore)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.post<ChoreDto>('/chores', chore, token)
 
             if (response.error) {
                 throw new Error(response.error)
@@ -87,7 +84,8 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
         ))
 
         try {
-            const response = await apiClient.put<ChoreDto>(`/chores/${choreId}`, updates)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.put<ChoreDto>(`/chores/${choreId}`, updates, token)
 
             if (response.error) {
                 // Revert the optimistic update on error
@@ -116,6 +114,7 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             chores,
             addChore,
             updateChore,
+            fetchChores,
             isLoading
         }}>
             {children}

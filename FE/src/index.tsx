@@ -2,21 +2,42 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { UserProvider } from './contexts/UserContext.tsx';
 import { ToastProvider } from './contexts/ToastContext';
 import { ExpenseProvider } from './contexts/ExpenseContext';
+import { Auth0Provider } from '@auth0/auth0-react';
+import { TimePeriodProvider } from './contexts/TimePeriodContext.tsx';
+import { SavingsProvider } from './contexts/SavingsContext.tsx';
+import { GoodDeedsProvider } from './contexts/GoodDeedsContext.tsx';
+import { ChoresProvider } from './contexts/ChoresContext.tsx';
+
+const domain = import.meta.env.VITE_AUTH0_DOMAIN;
+const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId="984750071739-bvac7ntsqccskujin9av3e69urdti499.apps.googleusercontent.com">
-      <UserProvider>
-        <ToastProvider>
-          <ExpenseProvider>
-            <App />
-          </ExpenseProvider>
-        </ToastProvider>
-      </UserProvider>
-    </GoogleOAuthProvider>
+    <Auth0Provider
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        audience: audience,
+        scope: "openid profile email",
+      }}
+    >
+      <ToastProvider>
+        <ExpenseProvider>
+          <TimePeriodProvider>
+            <SavingsProvider>
+              <GoodDeedsProvider>
+                <ChoresProvider>
+                  <App />
+                </ChoresProvider>
+              </GoodDeedsProvider>
+            </SavingsProvider>
+          </TimePeriodProvider>
+        </ExpenseProvider>
+      </ToastProvider>
+    </Auth0Provider>
   </StrictMode>
 );

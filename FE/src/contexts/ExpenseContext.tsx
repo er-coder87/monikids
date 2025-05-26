@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { Expense } from '../models/Expense'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
-import { useUser } from './UserContext'
+import { useAuth0 } from '@auth0/auth0-react'
 
 const transformApiTransaction = (transaction: ApiTransaction): Expense => ({
     id: transaction.id.toString(),
@@ -19,6 +19,7 @@ interface ExpenseContextType {
     addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>
     updateExpense: (expense: Expense) => Promise<void>
     deleteExpense: (id: string) => Promise<void>
+    fetchExpense: () => Promise<void>
 }
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined)
@@ -27,14 +28,15 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [totalExpenses, setTotalExpenses] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
-    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
+    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
 
-    const refetch = async () => {
+    const fetchExpense = async () => {
         if (!isAuthenticated || isAuthLoading) return
 
         setIsLoading(true)
         try {
-            const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions')
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions', token)
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
 
@@ -52,13 +54,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Initial fetch when authenticated
-    useEffect(() => {
-        if (isAuthenticated && !isAuthLoading) {
-            refetch()
-        }
-    }, [isAuthenticated, isAuthLoading])
-
     const addExpense = async (expense: Omit<Expense, 'id'>) => {
         try {
             const adjustedExpense = {
@@ -66,8 +61,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                 amount: -Math.abs(expense.amount),
                 type: 'expense'
             };
-
-            const response = await apiClient.post<ApiResponse>('/transactions', adjustedExpense)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.post<ApiResponse>('/transactions', adjustedExpense, token)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
 
@@ -82,7 +77,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const updateExpense = async (updatedExpense: Expense) => {
         try {
-            const response = await apiClient.put<ApiResponse>(`/transactions/${updatedExpense.id}`, updatedExpense)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.put<ApiResponse>(`/transactions/${updatedExpense.id}`, updatedExpense, token)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
 
@@ -101,7 +97,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     const deleteExpense = async (id: string) => {
         try {
-            const response = await apiClient.delete(`/transactions/${id}`)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.delete(`/transactions/${id}`, token)
             if (response.error) throw new Error(response.error)
 
             const expense = expenses.find(e => e.id === id)
@@ -123,6 +120,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             addExpense,
             updateExpense,
             deleteExpense,
+            fetchExpense,
         }}>
             {children}
         </ExpenseContext.Provider>

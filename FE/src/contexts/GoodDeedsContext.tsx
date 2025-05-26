@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
-import { useUser } from './UserContext'
+import { useAuth0 } from '@auth0/auth0-react'
 
 interface GoodDeedDto {
     id: number
@@ -17,6 +17,7 @@ interface GoodDeedsContextType {
     goodDeed: GoodDeedDto
     setGoodDeed: (goodDeed: GoodDeedDto) => void
     updateGoodDeed: (request: UpdateGoodDeedRequest) => Promise<void>
+    fetchGoodDeed: () => Promise<void>
     isLoading: boolean
 }
 
@@ -33,14 +34,15 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
         currentCount: 0
     })
     const [isLoading, setIsLoading] = useState(true)
-    const { isAuthenticated, isLoading: isAuthLoading } = useUser()
+    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
 
     async function fetchGoodDeed() {
         if (!isAuthenticated || isAuthLoading) return
 
         setIsLoading(true)
         try {
-            const response = await apiClient.get<{ goodDeeds: GoodDeedDto }>('/good-deeds')
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.get<{ goodDeeds: GoodDeedDto }>('/good-deeds', token)
             if (response.error) {
                 if (response.error.startsWith('401:')) return
                 throw new Error(response.error)
@@ -55,16 +57,10 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
         }
     }
 
-    // Initial fetch when authenticated
-    useEffect(() => {
-        if (isAuthenticated && !isAuthLoading) {
-            fetchGoodDeed()
-        }
-    }, [isAuthenticated, isAuthLoading])
-
     const updateGoodDeed = async (request: UpdateGoodDeedRequest) => {
         try {
-            const response = await apiClient.put<{ goodDeeds: GoodDeedDto }>(`/good-deeds`, request)
+            const token = await getAccessTokenSilently();
+            const response = await apiClient.put<{ goodDeeds: GoodDeedDto }>(`/good-deeds`, request, token)
 
             if (response.error) {
                 if (response.error.startsWith('401:')) {
@@ -84,7 +80,7 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
     }
 
     return (
-        <GoodDeedsContext.Provider value={{ goodDeed, setGoodDeed, updateGoodDeed, isLoading }}>
+        <GoodDeedsContext.Provider value={{ goodDeed, setGoodDeed, updateGoodDeed, fetchGoodDeed, isLoading }}>
             {children}
         </GoodDeedsContext.Provider>
     )

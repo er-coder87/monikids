@@ -1,5 +1,3 @@
-import { getCookie, setCookie, deleteCookie } from 'cookies-next'
-
 const API_URL = import.meta.env.VITE_API_URL
 
 interface ApiResponse<T> {
@@ -9,11 +7,8 @@ interface ApiResponse<T> {
 
 class ApiClient {
     private static instance: ApiClient
-    private csrfToken: string | null = null
 
     private constructor() {
-        // Initialize CSRF token
-        this.csrfToken = getCookie('XSRF-TOKEN') as string
     }
 
     static getInstance(): ApiClient {
@@ -25,17 +20,14 @@ class ApiClient {
 
     private async request<T>(
         endpoint: string,
-        options: RequestInit = {}
+        options: RequestInit = {},
+        token: string
     ): Promise<ApiResponse<T>> {
         const headers = new Headers({
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
             ...(options.headers as Record<string, string> || {})
         })
-
-        // Add CSRF token if available
-        if (this.csrfToken) {
-            headers.set('X-XSRF-TOKEN', this.csrfToken)
-        }
 
         try {
             const response = await fetch(`${API_URL}${endpoint}`, {
@@ -43,17 +35,6 @@ class ApiClient {
                 headers,
                 credentials: 'include', // Important for cookies
             })
-
-            // Update CSRF token if provided in response
-            const newCsrfToken = response.headers.get('X-XSRF-TOKEN')
-            if (newCsrfToken) {
-                this.csrfToken = newCsrfToken
-                setCookie('XSRF-TOKEN', newCsrfToken, {
-                    httpOnly: true,
-                    secure: import.meta.env.PROD,
-                    sameSite: 'strict'
-                })
-            }
 
             if (!response.ok) {
                 const error = await response.json().catch(() => ({ message: 'An error occurred' }))
@@ -67,45 +48,29 @@ class ApiClient {
         }
     }
 
-    // Auth methods
-    async login<T>(email: string, password: string): Promise<ApiResponse<T>> {
-        return this.request<T>('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        })
-    }
-
-    async logout(): Promise<ApiResponse<void>> {
-        this.csrfToken = null
-        return this.request<void>('/auth/logout', { method: 'POST' })
-    }
-
-    async validateToken<T>(): Promise<ApiResponse<T>> {
-        return this.request<T>('/auth/validate-token', { method: 'POST' })
-    }
-
     // Generic API methods
-    async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, { method: 'GET' })
+    async get<T>(endpoint: string, token: string): Promise<ApiResponse<T>> {
+        return this.request<T>(endpoint, { method: 'GET' }, token)
     }
 
-    async post<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+    async post<T>(endpoint: string, data: any, token: string): Promise<ApiResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'POST',
             body: JSON.stringify(data)
-        })
+        }, token)
     }
 
-    async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+    async put<T>(endpoint: string, data: any, token: string): Promise<ApiResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'PUT',
             body: JSON.stringify(data)
-        })
+        }, token)
     }
 
-    async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, { method: 'DELETE' })
+    async delete<T>(endpoint: string, token: string): Promise<ApiResponse<T>> {
+        return this.request<T>(endpoint, { method: 'DELETE' }, token)
     }
 }
 
-export const apiClient = ApiClient.getInstance() 
+export const apiClient = ApiClient.getInstance()
+
