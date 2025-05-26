@@ -168,12 +168,14 @@ public partial class PostgresContext : DbContext
 
             entity.HasIndex(e => e.Email, "Users_email_key").IsUnique();
 
+            entity.HasIndex(e => e.ExternalId, "Users_googleId_key").IsUnique();
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.Email).HasColumnName("email");
-            entity.Property(e => e.GoogleId).HasColumnName("googleId");
+            entity.Property(e => e.ExternalId).HasColumnName("external_id");
             entity.Property(e => e.PasswordHash).HasColumnName("passwordHash");
         });
 

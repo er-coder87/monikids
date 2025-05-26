@@ -7,33 +7,33 @@ namespace ExpenseTrackerApi.Services;
 
 public interface IGoodDeedService
 {
-    Task<IEnumerable<GoodDeedDto>> GetGoodDeedsAsync(long userId);
-    Task<GoodDeedDto?> UpdateGoodDeedAsync(long userId, UpdateGoodDeedRequest request);
+    Task<IEnumerable<GoodDeedDto>> GetGoodDeedsAsync(string externalUserId);
+    Task<GoodDeedDto?> UpdateGoodDeedAsync(string externalUserId, UpdateGoodDeedRequest request);
 }
 
 public class GoodDeedService(IGoodDeedRepository goodDeedRepository, ILogger<GoodDeedService> logger)
     : IGoodDeedService
 {
-    public async Task<IEnumerable<GoodDeedDto>> GetGoodDeedsAsync(long userId)
+    public async Task<IEnumerable<GoodDeedDto>> GetGoodDeedsAsync(string externalUserId)
     {
         try
         {
-            var goodDeeds = await goodDeedRepository.GetGoodDeedsAsync(userId);
+            var goodDeeds = await goodDeedRepository.GetGoodDeedsAsync(externalUserId);
             return goodDeeds.ToDtoList();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting good deeds for user {UserId}", userId);
+            logger.LogError(ex, "Error getting good deeds for user {ExternalUserId}", externalUserId);
             throw;
         }
     }
 
-    public async Task<GoodDeedDto?> UpdateGoodDeedAsync(long userId, UpdateGoodDeedRequest request)
+    public async Task<GoodDeedDto?> UpdateGoodDeedAsync(string externalUserId, UpdateGoodDeedRequest request)
     {
         try
         {
             // Get existing good deed
-            var goodDeed = await goodDeedRepository.GetGoodDeedByIdAsync(userId);
+            var goodDeed = await goodDeedRepository.GetGoodDeedByIdAsync(externalUserId);
             if (goodDeed == null)
             {
                 return null;
@@ -44,12 +44,12 @@ public class GoodDeedService(IGoodDeedRepository goodDeedRepository, ILogger<Goo
             goodDeed.MaxCount = request.MaxCount ?? goodDeed.MaxCount;
             
             // Save changes
-            var updatedGoodDeed = await goodDeedRepository.UpdateGoodDeedAsync(userId, goodDeed);
+            var updatedGoodDeed = await goodDeedRepository.UpdateGoodDeedAsync(externalUserId, goodDeed);
             return updatedGoodDeed?.ToDto();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating good deed for user {UserId}", userId);
+            logger.LogError(ex, "Error updating good deed for user {ExternalUserId}", externalUserId);
             throw;
         }
     }

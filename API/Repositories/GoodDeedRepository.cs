@@ -5,54 +5,71 @@ namespace ExpenseTrackerApi.Repositories;
 
 public interface IGoodDeedRepository
 {
-    Task<IEnumerable<GoodDeed>> GetGoodDeedsAsync(long userId);
-    Task<GoodDeed?> GetGoodDeedByIdAsync(long userId);
-    Task<GoodDeed?> UpdateGoodDeedAsync(long userId, GoodDeed goodDeed);
+    Task<IEnumerable<GoodDeed>> GetGoodDeedsAsync(string externalUserId);
+    Task<GoodDeed?> GetGoodDeedByIdAsync(string externalUserId);
+    Task<GoodDeed?> UpdateGoodDeedAsync(string externalUserId, GoodDeed goodDeed);
 }
 
 public class GoodDeedRepository(PostgresContext context, ILogger<GoodDeedRepository> logger)
     : IGoodDeedRepository
 {
-    public async Task<IEnumerable<GoodDeed>> GetGoodDeedsAsync(long userId)
+    public async Task<IEnumerable<GoodDeed>> GetGoodDeedsAsync(string externalUserId)
     {
         try
         {
             return await context.GoodDeeds
-                .Where(g => g.UserId == userId)
-                .OrderByDescending(g => g.CreatedAt)
+                .Join(context.Users,
+                    deed => deed.UserId,
+                    user => user.Id,
+                    (deed, user) => new { deed, user })
+                .Where(x => x.user.ExternalId == externalUserId)
+                .OrderByDescending(x => x.deed.CreatedAt)
+                .Select(x => x.deed)
                 .ToListAsync();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error retrieving good deeds for user {UserId}", userId);
+            logger.LogError(ex, "Error retrieving good deeds for user {ExternalUserId}", externalUserId);
             throw;
         }
     }
 
-    public async Task<GoodDeed?> GetGoodDeedByIdAsync(long userId)
+    public async Task<GoodDeed?> GetGoodDeedByIdAsync(string externalUserId)
     {
         try
         {
             return await context.GoodDeeds
-                .FirstOrDefaultAsync(g => g.UserId == userId);
+                .Join(context.Users,
+                    deed => deed.UserId,
+                    user => user.Id,
+                    (deed, user) => new { deed, user })
+                .Where(x => x.user.ExternalId == externalUserId)
+                .Select(x => x.deed)
+                .FirstOrDefaultAsync();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error retrieving good deed for user {UserId}", userId);
+            logger.LogError(ex, "Error retrieving good deed for user {ExternalUserId}", externalUserId);
             throw;
         }
     }
 
-    public async Task<GoodDeed?> UpdateGoodDeedAsync(long userId, GoodDeed goodDeed)
+    public async Task<GoodDeed?> UpdateGoodDeedAsync(string externalUserId, GoodDeed goodDeed)
     {
         try
         {
             var existingDeed = await context.GoodDeeds
-                .FirstOrDefaultAsync(g => g.UserId == userId && g.Id == goodDeed.Id);
+                .Join(context.Users,
+                    deed => deed.UserId,
+                    user => user.Id,
+                    (deed, user) => new { deed, user })
+                .Where(x => x.user.ExternalId == externalUserId && x.deed.Id == goodDeed.Id)
+                .Select(x => x.deed)
+                .FirstOrDefaultAsync();
 
             if (existingDeed == null)
             {
-                logger.LogWarning("Good deed {Id} not found for user {UserId}", goodDeed.Id, userId);
+                logger.LogWarning("Good deed {Id} not found for user {ExternalUserId}", goodDeed.Id, externalUserId);
                 return null;
             }
 
@@ -66,12 +83,14 @@ public class GoodDeedRepository(PostgresContext context, ILogger<GoodDeedReposit
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            logger.LogError(ex, "Concurrency error updating good deed {Id} for user {UserId}", goodDeed.Id, userId);
+            logger.LogError(ex, "Concurrency error updating good deed {Id} for user {ExternalUserId}", 
+                goodDeed.Id, externalUserId);
             throw;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating good deed {Id} for user {UserId}", goodDeed.Id, userId);
+            logger.LogError(ex, "Error updating good deed {Id} for user {ExternalUserId}", 
+                goodDeed.Id, externalUserId);
             throw;
         }
     }

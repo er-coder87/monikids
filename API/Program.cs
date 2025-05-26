@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using ExpenseTrackerApi.Models;
 using ExpenseTrackerApi.Repositories;
 using ExpenseTrackerApi.Services;
@@ -15,7 +16,6 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<IUserRepository, UserRepository>(); 
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
@@ -23,7 +23,6 @@ builder.Services.AddScoped<IChoreRepository, ChoreRepository>();
 builder.Services.AddScoped<IGoodDeedRepository, GoodDeedRepository>();
 
 // Register your custom services
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IChoreService, ChoreService>();
 builder.Services.AddScoped<IGoodDeedService, GoodDeedService>();
@@ -44,28 +43,61 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Rate limiting per user or IP address
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var partitionKey = context.User.Identity?.Name 
+                           ?? context.Connection.RemoteIpAddress?.ToString() 
+                           ?? "anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+        });
+    });
+});
+
+// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//     .AddJwtBearer(options =>
+//     {
+//         options.TokenValidationParameters = new TokenValidationParameters
+//         {
+//             ValidateIssuer = true,
+//             ValidateAudience = true,
+//             ValidateLifetime = true,
+//             ValidateIssuerSigningKey = true,
+//             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+//             ValidAudience = builder.Configuration["JwtSettings:Audience"],
+//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]))
+//         };
+//         
+//         options.Events = new JwtBearerEvents
+//         {
+//             OnMessageReceived = context =>
+//             {
+//                 // Get the JWT from the cookie
+//                 context.Token = context.Request.Cookies["jwt"];
+//                 return Task.CompletedTask;
+//             }
+//         };
+//     });
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.Authority = "https://dev-o3mf2dp3vmtc45o8.au.auth0.com";
+        options.Audience = "https://localhost:5096"; // match Auth0 API identifier
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]))
-        };
-        
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                // Get the JWT from the cookie
-                context.Token = context.Request.Cookies["jwt"];
-                return Task.CompletedTask;
-            }
+            ValidateLifetime = true
         };
     });
 

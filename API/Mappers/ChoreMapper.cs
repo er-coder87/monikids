@@ -28,11 +28,10 @@ public static class ChoreMapper
         return chores?.Select(ToDto) ?? [];
     }
 
-    public static Chore ToEntity(this CreateChoreRequestDto request, long userId)
+    public static Chore ToEntity(this CreateChoreRequestDto request)
     {
         return new Chore
         {
-            UserId = userId,
             Description = request.Description,
             AllowanceAmount = request.AllowanceAmount,
             MaxCount = request.MaxCount,

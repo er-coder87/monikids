@@ -20,8 +20,12 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     {
         try
         {
-            var userId = User.GetUserId();
-            var transactions = await transactionRepository.GetTransactionsAsync(userId, filter);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+            var transactions = await transactionRepository.GetTransactionsAsync(externalUserId, filter);
             var transactionDtos = TransactionMapper.ToDtoList(transactions);
             return Ok(new { Transactions = transactionDtos});
         }
@@ -37,8 +41,12 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     {
         try
         {
-            var userId = User.GetUserId();
-            var transaction = await transactionRepository.GetTransactionByIdAsync(userId, id);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+            var transaction = await transactionRepository.GetTransactionByIdAsync(externalUserId, id);
             if (transaction == null)
             {
                 return NotFound();
@@ -58,18 +66,21 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     {
         try
         {
-            var userId = User.GetUserId();
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
         
             var transaction = new Transaction
             {
-                UserId = userId,
                 TransactionDate = request.Date,
                 Description = request.Description,
                 Type = request.Type,
                 Amount = request.Amount,
             };
         
-            var createdTransaction = await transactionRepository.AddTransactionAsync(userId, transaction);
+            var createdTransaction = await transactionRepository.AddTransactionAsync(externalUserId, transaction);
             var transactionDto = TransactionMapper.ToDto(createdTransaction);
         
             return CreatedAtAction(
@@ -90,8 +101,12 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     {
         try
         {
-            var userId = User.GetUserId();
-            await transactionRepository.DeleteTransactionAsync(userId, id);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+            await transactionRepository.DeleteTransactionAsync(externalUserId, id);
             return NoContent(); // 204 No Content for successful deletion
         }
         catch (Exception ex)
@@ -107,13 +122,17 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     {
         try
         {
-            var userId = User.GetUserId();
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
             if (id != updatedTransaction.Id)
             {
                 return BadRequest("Transaction ID mismatch");
             }
 
-            var result = await transactionRepository.UpdateTransactionAsync(userId, updatedTransaction);
+            var result = await transactionRepository.UpdateTransactionAsync(externalUserId, updatedTransaction);
             if (result == null)
             {
                 return NotFound();

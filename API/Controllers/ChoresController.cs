@@ -1,4 +1,5 @@
 ﻿
+using System.Security.Claims;
 using ExpenseTrackerApi.Controllers.Dtos;
 using ExpenseTrackerApi.Controllers.RequestDtos;
 using ExpenseTrackerApi.Extensions;
@@ -19,8 +20,13 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
     {
         try
         {
-            var userId = User.GetUserId();
-            var chores = await choreService.GetChoresAsync(userId);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+            
+            var chores = await choreService.GetChoresAsync(externalUserId);
             return Ok(chores);
         }
         catch (Exception ex)
@@ -35,8 +41,13 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
     {
         try
         {
-            var userId = User.GetUserId();
-            var chore = await choreService.CreateChoreAsync(userId, request);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var chore = await choreService.CreateChoreAsync(externalUserId, request);
             return Ok(chore);
         }
         catch (ArgumentException ex)
@@ -57,8 +68,13 @@ public class ChoresController(IChoreService choreService, ILogger<ChoresControll
     {
         try
         {
-            var userId = User.GetUserId();
-            var chore = await choreService.UpdateChoreAsync(userId, id, request);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var chore = await choreService.UpdateChoreAsync(externalUserId, id, request);
             
             if (chore == null)
             {

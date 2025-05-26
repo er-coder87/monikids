@@ -1,4 +1,5 @@
-﻿using ExpenseTrackerApi.Controllers.Dtos;
+﻿using System.Security.Claims;
+using ExpenseTrackerApi.Controllers.Dtos;
 using ExpenseTrackerApi.Controllers.RequestDtos;
 using ExpenseTrackerApi.Extensions;
 using ExpenseTrackerApi.Services;
@@ -18,8 +19,13 @@ public class GoodDeedsController(IGoodDeedService goodDeedService, ILogger<GoodD
     {
         try
         {
-            var userId = User.GetUserId();
-            var goodDeeds = await goodDeedService.GetGoodDeedsAsync(userId);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+            
+            var goodDeeds = await goodDeedService.GetGoodDeedsAsync(externalUserId);
             return Ok(new { GoodDeeds = goodDeeds.FirstOrDefault() });
         }
         catch (Exception ex)
@@ -34,8 +40,13 @@ public class GoodDeedsController(IGoodDeedService goodDeedService, ILogger<GoodD
     {
         try
         {
-            var userId = User.GetUserId();
-            var goodDeed = await goodDeedService.UpdateGoodDeedAsync(userId, request);
+            var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (externalUserId == null)
+            {
+                return Unauthorized();
+            }
+            
+            var goodDeed = await goodDeedService.UpdateGoodDeedAsync(externalUserId, request);
             
             if (goodDeed == null)
             {

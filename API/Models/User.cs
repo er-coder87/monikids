@@ -11,7 +11,7 @@ public partial class User
 
     public string? Email { get; set; }
 
-    public string? GoogleId { get; set; }
+    public string? ExternalId { get; set; }
 
     public string PasswordHash { get; set; } = null!;
 
