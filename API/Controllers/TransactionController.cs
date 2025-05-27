@@ -1,10 +1,11 @@
-﻿using System.Security.Claims;
+﻿
+using System.Security.Claims;
 using ExpenseTrackerApi.Controllers.Dtos;
 using ExpenseTrackerApi.Controllers.RequestDtos;
 using ExpenseTrackerApi.Extensions;
 using ExpenseTrackerApi.Mappers;
 using ExpenseTrackerApi.Models;
-using ExpenseTrackerApi.Repositories;
+using ExpenseTrackerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +14,9 @@ namespace ExpenseTrackerApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/transactions")]
-public class TransactionsController(ILogger<TransactionsController> logger, ITransactionRepository transactionRepository) : ControllerBase
+public class TransactionsController(
+    ILogger<TransactionsController> logger,
+    ITransactionService transactionService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions([FromQuery] TransactionFilter? filter)
@@ -25,7 +28,7 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
             {
                 return Unauthorized();
             }
-            var transactions = await transactionRepository.GetTransactionsAsync(externalUserId, filter);
+            var transactions = await transactionService.GetTransactionsAsync(externalUserId, filter);
             var transactionDtos = TransactionMapper.ToDtoList(transactions);
             return Ok(new { Transactions = transactionDtos});
         }
@@ -46,7 +49,7 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
             {
                 return Unauthorized();
             }
-            var transaction = await transactionRepository.GetTransactionByIdAsync(externalUserId, id);
+            var transaction = await transactionService.GetTransactionByIdAsync(externalUserId, id);
             if (transaction == null)
             {
                 return NotFound();
@@ -62,7 +65,7 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
     }
 
     [HttpPost]
-    public async Task<ActionResult<TransactionDto>> AddTransaction([FromBody] CreateTransactionRequest request)
+    public async Task<ActionResult<TransactionDto>> AddTransaction([FromBody] CreateTransactionRequestDto requestDto)
     {
         try
         {
@@ -72,15 +75,7 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
                 return Unauthorized();
             }
         
-            var transaction = new Transaction
-            {
-                TransactionDate = request.Date,
-                Description = request.Description,
-                Type = request.Type,
-                Amount = request.Amount,
-            };
-        
-            var createdTransaction = await transactionRepository.AddTransactionAsync(externalUserId, transaction);
+            var createdTransaction = await transactionService.AddTransactionAsync(externalUserId, requestDto);
             var transactionDto = TransactionMapper.ToDto(createdTransaction);
         
             return CreatedAtAction(
@@ -106,19 +101,18 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
             {
                 return Unauthorized();
             }
-            await transactionRepository.DeleteTransactionAsync(externalUserId, id);
-            return NoContent(); // 204 No Content for successful deletion
+            await transactionService.DeleteTransactionAsync(externalUserId, id);
+            return NoContent();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error deleting the transaction");
             return StatusCode(500, "An error occurred while deleting the transaction");
         }
-
     }
 
     [HttpPut("{id:long}")]
-    public async Task<ActionResult<TransactionDto>> UpdateTransaction(long id, [FromBody] Transaction updatedTransaction)
+    public async Task<ActionResult<TransactionDto>> UpdateTransaction(long id, [FromBody] UpdateTransactionRequestDto updatedTransaction)
     {
         try
         {
@@ -132,13 +126,13 @@ public class TransactionsController(ILogger<TransactionsController> logger, ITra
                 return BadRequest("Transaction ID mismatch");
             }
 
-            var result = await transactionRepository.UpdateTransactionAsync(externalUserId, updatedTransaction);
+            var result = await transactionService.UpdateTransactionAsync(externalUserId, id, updatedTransaction);
             if (result == null)
             {
                 return NotFound();
             }
             var transactionDto = TransactionMapper.ToDto(result);
-            return Ok(transactionDto);
+            return Ok(new { Message = "Transaction updated successfully", Transaction = transactionDto });
         }
         catch (Exception ex)
         {

@@ -15,7 +15,7 @@ public interface ITransactionRepository
     Task<Transaction?> UpdateTransactionAsync(string externalUserId, Transaction updatedTransaction);
 }
 
-public class TransactionRepository(PostgresContext postgresContext) : ITransactionRepository
+public class TransactionRepository(PostgresContext context, ILogger<TransactionRepository> logger) : ITransactionRepository
 {
     public async Task<Transaction> AddTransactionAsync(string externalUserId, Transaction transaction)
     {
@@ -23,8 +23,8 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
         transaction.UserId = userId;
         transaction.CreatedAt = DateTime.UtcNow;
     
-        postgresContext.Transactions.Add(transaction);
-        await postgresContext.SaveChangesAsync();
+        context.Transactions.Add(transaction);
+        await context.SaveChangesAsync();
     
         return transaction;
     }
@@ -38,8 +38,8 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
         var transactionsToUpdate = new List<Transaction>();
 
         // Fetch all existing transactions for the user
-        var existingTransactions = await postgresContext.Transactions
-            .Join(postgresContext.Users,
+        var existingTransactions = await context.Transactions
+            .Join(context.Users,
                 t => t.UserId,
                 u => u.Id,
                 (t, u) => new { Transaction = t, User = u })
@@ -69,23 +69,23 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
 
         if (transactionsToInsert.Any())
         {
-            await postgresContext.Transactions.AddRangeAsync(transactionsToInsert);
+            await context.Transactions.AddRangeAsync(transactionsToInsert);
         }
 
         if (transactionsToUpdate.Any())
         {
-            postgresContext.Transactions.UpdateRange(transactionsToUpdate);
+            context.Transactions.UpdateRange(transactionsToUpdate);
         }
 
-        await postgresContext.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return incomingTransactions;
     }
     
     public async Task<IEnumerable<Transaction>> GetTransactionsAsync(string externalUserId, TransactionFilter? filter = null)
     {
-        var query = postgresContext.Transactions
-            .Join(postgresContext.Users,
+        var query = context.Transactions
+            .Join(context.Users,
                 t => t.UserId,
                 u => u.Id,
                 (t, u) => new { Transaction = t, User = u })
@@ -112,8 +112,8 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
 
     public async Task<Transaction?> GetTransactionByIdAsync(string externalUserId, long id)
     {
-        return await postgresContext.Transactions
-            .Join(postgresContext.Users,
+        return await context.Transactions
+            .Join(context.Users,
                 t => t.UserId,
                 u => u.Id,
                 (t, u) => new { Transaction = t, User = u })
@@ -125,8 +125,8 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
 
     public async Task DeleteTransactionAsync(string externalUserId, long id)
     {
-        var transaction = await postgresContext.Transactions
-            .Join(postgresContext.Users,
+        var transaction = await context.Transactions
+            .Join(context.Users,
                 t => t.UserId,
                 u => u.Id,
                 (t, u) => new { Transaction = t, User = u })
@@ -136,16 +136,15 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
 
         if (transaction != null)
         {
-            postgresContext.Transactions.Remove(transaction);
-            await postgresContext.SaveChangesAsync();
+            context.Transactions.Remove(transaction);
+            await context.SaveChangesAsync();
         }
     }
 
     public async Task<Transaction?> UpdateTransactionAsync(string externalUserId, Transaction updatedTransaction)
     {
-        var userId = await GetUserIdFromExternalId(externalUserId);
-        var existingTransaction = await postgresContext.Transactions
-            .Join(postgresContext.Users,
+        var existingTransaction = await context.Transactions
+            .Join(context.Users,
                 t => t.UserId,
                 u => u.Id,
                 (t, u) => new { Transaction = t, User = u })
@@ -153,30 +152,31 @@ public class TransactionRepository(PostgresContext postgresContext) : ITransacti
             .Select(x => x.Transaction)
             .FirstOrDefaultAsync();
 
-        if (existingTransaction != null)
+        if (existingTransaction == null)
         {
-            postgresContext.Entry(existingTransaction).CurrentValues.SetValues(updatedTransaction);
-
-            // Ensure UserId cannot be changed through this update method
-            existingTransaction.UserId = userId;
-
-            // Handle Category update if the ID is different
-            if (existingTransaction.CategoryId != updatedTransaction.CategoryId)
-            {
-                existingTransaction.CategoryId = updatedTransaction.CategoryId;
-                existingTransaction.Category = await postgresContext.Categories.FindAsync(updatedTransaction.CategoryId);
-            }
-
-            await postgresContext.SaveChangesAsync();
-            return existingTransaction;
+            return null;
         }
 
-        return null;
+        // Update only allowed fields
+        existingTransaction.Amount = updatedTransaction.Amount;
+        existingTransaction.Description = updatedTransaction.Description;
+        existingTransaction.TransactionDate = updatedTransaction.TransactionDate;
+
+        try
+        {
+            await context.SaveChangesAsync();
+            return existingTransaction;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating transaction {TransactionId} for user {ExternalId}", existingTransaction.Id, externalUserId);
+            throw;
+        }
     }
 
     private async Task<long> GetUserIdFromExternalId(string externalUserId)
     {
-        var userId = await postgresContext.Users
+        var userId = await context.Users
             .Where(u => u.ExternalId == externalUserId)
             .Select(u => u.Id)
             .FirstOrDefaultAsync();

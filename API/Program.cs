@@ -26,6 +26,7 @@ builder.Services.AddScoped<IGoodDeedRepository, GoodDeedRepository>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IChoreService, ChoreService>();
 builder.Services.AddScoped<IGoodDeedService, GoodDeedService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 builder.Services.AddDbContext<PostgresContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
