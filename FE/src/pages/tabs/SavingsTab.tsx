@@ -6,7 +6,6 @@ import { SavingTable } from "../../components/SavingTable"
 import { useSavings } from "../../contexts/SavingsContext"
 import { TimePeriodSelector } from "../../components/TimePeriodSelector"
 import { useTimePeriod } from "../../contexts/TimePeriodContext"
-import { useToast } from "../../contexts/ToastContext"
 
 interface PiggyBankTransaction {
     description: string
@@ -38,10 +37,9 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         recurringFrequency: 'monthly'
     })
 
-    const { savingsOrCashOuts, addSaving, updateSaving, deleteSaving, isLoading } = useSavings()
+    const { savingsOrCashOuts, addSaving, updateSaving, deleteSaving } = useSavings()
     const { startDate, endDate } = useTimePeriod()
     const [editingSaving, setEditingSaving] = useState<Saving | null>(null)
-    const { addToast } = useToast()
 
     const filteredSavings = savingsOrCashOuts.filter(saving => {
         const savingDate = new Date(saving.date)
@@ -61,11 +59,9 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         try {
             if (editingSaving) {
                 await updateSaving({ ...transaction, id: editingSaving.id })
-                addToast('Saving updated successfully', 'success')
                 setEditingSaving(null)
             } else {
                 await addSaving(transaction)
-                addToast('Saving added successfully', 'success')
             }
 
             setFormData({
@@ -77,7 +73,6 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
             })
         } catch (error) {
             console.error('Error saving transaction:', error)
-            addToast('Failed to save transaction', 'error')
         }
     }
 
@@ -88,21 +83,17 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
     const handleSaveSaving = async (updatedSaving: Saving) => {
         try {
             await updateSaving(updatedSaving)
-            addToast('Saving updated successfully', 'success')
             setEditingSaving(null)
         } catch (error) {
             console.error('Error updating saving:', error)
-            addToast('Failed to update saving', 'error')
         }
     }
 
     const handleDeleteSaving = async (id: string) => {
         try {
             await deleteSaving(id)
-            addToast('Saving deleted successfully', 'success')
         } catch (error) {
             console.error('Error deleting saving:', error)
-            addToast('Failed to delete saving', 'error')
         }
     }
 
@@ -213,33 +204,6 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Recurring
-                                </label>
-                                <div className="mt-1 flex items-center space-x-4">
-                                    <label className="inline-flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isRecurring}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, isRecurring: e.target.checked }))}
-                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-600"
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Recurring</span>
-                                    </label>
-                                    {formData.isRecurring && (
-                                        <select
-                                            value={formData.recurringFrequency}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, recurringFrequency: e.target.value as 'daily' | 'weekly' | 'monthly' }))}
-                                            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 px-3 py-2"
-                                        >
-                                            <option value="daily">Daily</option>
-                                            <option value="weekly">Weekly</option>
-                                            <option value="monthly">Monthly</option>
-                                        </select>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                         <div className="flex justify-end">
                             <button
@@ -257,7 +221,7 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
                 onEdit={handleEditSaving}
                 onDelete={handleDeleteSaving}
                 savings={filteredSavings}
-                isLoading={isLoading}
+                isLoading={false}
             />
 
             {editingSaving && (

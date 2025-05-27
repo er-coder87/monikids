@@ -2,16 +2,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
 import { useAuth0 } from '@auth0/auth0-react'
-
-interface Saving {
-    id: string
-    description: string
-    amount: number
-    date: Date
-    isRecurring: boolean
-    recurringFrequency?: 'daily' | 'weekly' | 'monthly'
-    type: 'saving' | 'cash_out'
-}
+import { Saving } from '../models/Saving'
 
 interface SavingsContextType {
     savingsOrCashOuts: Saving[]

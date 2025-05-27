@@ -43,6 +43,7 @@ export function ChoreCard({ chore }: ChoreCardProps) {
                 amount: chore.allowanceAmount ?? 0,
                 date: today,
                 isRecurring: false,
+                type: 'saving'
             })
 
             addToast(`Added saving $${chore.allowanceAmount} for ${chore.description}`)
@@ -66,6 +67,7 @@ export function ChoreCard({ chore }: ChoreCardProps) {
                     currentCount: newCount,
                     doneDateTime: newCount === chore.maxCount ? new Date().toISOString() : null
                 })
+                addToast(`Completed ${chore.description}`)
             }
         } catch (error) {
             console.error('Error completing chore:', error)

@@ -5,5 +5,5 @@ export interface Saving {
     date: Date
     isRecurring: boolean
     recurringFrequency?: 'daily' | 'weekly' | 'monthly'
-    type: 'saving' | 'cash_out'
+    type?: 'saving' | 'cash_out'
 }
