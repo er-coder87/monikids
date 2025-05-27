@@ -39,7 +39,7 @@ export function WithdrawModal({ isOpen, onClose, onWithdraw, maxAmount }: Withdr
             setError('')
             setIsAnimating(false)
             onClose()
-        }, 3000)
+        }, 1500)
     }
 
     return (

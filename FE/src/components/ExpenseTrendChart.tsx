@@ -1,6 +1,6 @@
 import { eachDayOfInterval, startOfMonth, endOfMonth, startOfYear, endOfYear, format, isValid } from 'date-fns';
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, XAxisProps, LineProps } from 'recharts';
 import { EmptyState } from './EmptyState';
 import { Period } from './TimePeriodSelector';
 import { getAmountAtTimeData, getAccumulatedAmountData } from '../utilities/expenseUtils';
@@ -35,24 +35,44 @@ const ExpenseTrendChart: React.FC<ExpenseTrendChartProps> = ({
     const amountData = getAmountAtTimeData(expenses);
     const accumulatedData = getAccumulatedAmountData(expenses);
 
-    // Convert dates to the desired format
-    const formattedAmountData = amountData.map(item => ({
-      date: format(new Date(item.date), dateFormat),
-      amount: item.amount
-    }));
+    // Merge expenses on the same date
+    const mergedAmountData = amountData.reduce((acc, item) => {
+      const date = format(new Date(item.date), dateFormat);
+      const existingItem = acc.find(d => d.date === date);
 
-    const formattedAccumulatedData = accumulatedData.map(item => ({
-      date: format(new Date(item.date), dateFormat),
-      accumulatedAmount: item.accumulatedAmount
-    }));
+      if (existingItem) {
+        existingItem.amount = (existingItem.amount || 0) + item.amount;
+      } else {
+        acc.push({
+          date,
+          amount: item.amount
+        });
+      }
+      return acc;
+    }, [] as ChartData[]);
+
+    const mergedAccumulatedData = accumulatedData.reduce((acc, item) => {
+      const date = format(new Date(item.date), dateFormat);
+      const existingItem = acc.find(d => d.date === date);
+
+      if (existingItem) {
+        existingItem.accumulatedAmount = (existingItem.accumulatedAmount || 0) + item.accumulatedAmount;
+      } else {
+        acc.push({
+          date,
+          accumulatedAmount: item.accumulatedAmount
+        });
+      }
+      return acc;
+    }, [] as ChartData[]);
 
     // Sort data by date
-    formattedAmountData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    formattedAccumulatedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    mergedAmountData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    mergedAccumulatedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return {
-      amountData: formattedAmountData,
-      accumulatedData: formattedAccumulatedData
+      amountData: mergedAmountData,
+      accumulatedData: mergedAccumulatedData
     };
   }, [expenses, dateFormat]);
 
@@ -123,6 +143,58 @@ const ExpenseTrendChart: React.FC<ExpenseTrendChartProps> = ({
     return <EmptyState title="No Data" message="No expenses data available" />;
   }
 
+  const renderXAxisTick: XAxisProps['tick'] = (props) => {
+    const { x, y, payload } = props;
+    const data = showAccumulated ? filledAccumulatedData : filledAmountData;
+    const index = data.findIndex(item => item.date === payload.value);
+    const isFirst = index === 0;
+    const isLast = index === data.length - 1;
+    const value = showAccumulated ? data[index]?.accumulatedAmount : data[index]?.amount;
+
+    // Show tick if it's first, last, or has a non-zero value
+    if (isFirst || isLast || (value !== undefined && value !== 0)) {
+      return (
+        <g transform={`translate(${x},${y})`}>
+          <text
+            x={0}
+            y={0}
+            dy={16}
+            textAnchor="middle"
+            fill="#6B7280"
+            fontSize={12}
+          >
+            {payload.value}
+          </text>
+        </g>
+      );
+    }
+    return <g />;
+  };
+
+  const renderDot: LineProps['dot'] = (props) => {
+    const { cx, cy, payload } = props;
+    const value = showAccumulated ? payload.accumulatedAmount : payload.amount;
+    const data = showAccumulated ? filledAccumulatedData : filledAmountData;
+    const index = data.findIndex(item => item.date === payload.date);
+    const isFirst = index === 0;
+    const isLast = index === data.length - 1;
+
+    // Show dot if it's first, last, or has a non-zero value
+    if (isFirst || isLast || (value !== undefined && value !== 0)) {
+      return (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={3}
+          stroke="#2563eb"
+          strokeWidth={2}
+          fill="white"
+        />
+      );
+    }
+    return <g />;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
@@ -152,7 +224,7 @@ const ExpenseTrendChart: React.FC<ExpenseTrendChartProps> = ({
             <XAxis
               dataKey="date"
               stroke="#6B7280"
-              tick={{ fontSize: 12 }}
+              tick={renderXAxisTick}
               tickLine={false}
               axisLine={{ stroke: '#E5E7EB' }}
               padding={{ left: 10, right: 10 }}
@@ -190,13 +262,7 @@ const ExpenseTrendChart: React.FC<ExpenseTrendChartProps> = ({
               dataKey={showAccumulated ? 'accumulatedAmount' : 'amount'}
               stroke="#2563eb"
               strokeWidth={2}
-              dot={{
-                r: 3,
-                strokeWidth: 2,
-                stroke: '#2563eb',
-                fill: 'white',
-                strokeDasharray: '0',
-              }}
+              dot={renderDot}
               activeDot={{
                 r: 5,
                 strokeWidth: 2,

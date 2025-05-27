@@ -1,9 +1,8 @@
 import piggybankKids from './assets/kids-with-piggybanks.jpg';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { ArrowRight, PiggyBank, BookOpen, Sparkles, Shield, BarChart } from 'lucide-react';
+import { ArrowRight, PiggyBank, BookOpen, Sparkles, BarChart } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import UnauthorizedPage from './pages/UnauthorizedPage';
-import LearnMore from './pages/LearnMore';
 import PrivacyPolicy from './pages/legal/privacy-policy';
 import TermsOfService from './pages/legal/terms-of-service';
 import { NavBar } from './components/NavBar';
@@ -14,10 +13,30 @@ import { GoodDeedsProvider } from './contexts/GoodDeedsContext';
 import { ChoresProvider } from './contexts/ChoresContext';
 import { PricingPage } from './pages/PricingPage';
 import { SuccessPage } from './pages/SuccessPage';
+import { useAuth0 } from '@auth0/auth0-react';
 
 function Home() {
   const navigate = useNavigate();
-  console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+  const { isAuthenticated } = useAuth0();
+  const faqs = [
+    {
+      question: "Is DigiPig suitable for my child's age?",
+      answer: "DigiPig is designed for kids aged 5 to 15, with features that adapt as your child grows. Parents can customize the experience to match their child's age and understanding."
+    },
+    {
+      question: "How does DigiPig help teach financial literacy?",
+      answer: "With interactive tools like the digital piggy bank, chore rewards, and savings goals, DigiPig helps children build real money skills in a safe and fun environment."
+    },
+    {
+      question: "Is DigiPig connected to a bank or third-party provider?",
+      answer: "No, DigiPig isn’t connected to any bank or external service. It works just like a traditional piggy bank—only digital and accessible through your devices. Parents set the allowance and give the money to their kids in person, keeping everything simple and under their control."
+    },
+    {
+      question: "Is my child's financial data secure?",
+      answer: "Absolutely. DigiPig uses high-standard security measures to protect your child’s information. Parents have full control over all transactions and settings. For more details, visit our Privacy Policy page."
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Navigation Bar */}
@@ -26,25 +45,24 @@ function Home() {
         {/* Hero Section */}
         <div className="flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-10">
               Your Child's First
               <span className="text-pink-600"> Digital Piggy Bank</span>
             </h1>
+            <h3 className="text-xl md:text-xl text-gray-700 mb-4">
+              Smart money starts here
+              <span className="text-pink-400"> where kids begin their money journey</span>
+            </h3>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Start your child's financial journey with our kid-friendly piggybank app. Track savings, manage chores, and teach valuable money lessons in a fun and engaging way.
+              A fun digital piggy bank where kids can watch their savings grow, earn rewards by doing chores, and learn money smarts—all while having a blast!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <button
-                onClick={() => navigate('pricing-page')}
+                onClick={() => isAuthenticated ? navigate('dashboard') : navigate('pricing-page')}
                 className="px-8 py-4 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors inline-flex items-center justify-center group"
               >
                 Get Started
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button
-                onClick={() => navigate('/learn-more')}
-                className="px-8 py-4 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors">
-                Learn More
               </button>
             </div>
           </div>
@@ -81,27 +99,27 @@ function Home() {
           </div>
         </div>
         {/* Features Section */}
-        <div className="mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           {[
             {
               icon: <PiggyBank size={32} className="text-indigo-600" />,
-              title: "Digital Piggybank",
-              description: "Manage your child's savings, track allowances, and monitor spending habits"
+              title: "Digital Piggy Bank",
+              description: "Help your child learn to save with our interactive digital piggybank. Track savings, manage allowances, and celebrate financial milestones."
             },
             {
               icon: <BookOpen size={32} className="text-indigo-600" />,
               title: "Financial Education",
-              description: "Build strong money habits through interactive lessons and real-world practice"
+              description: "Build strong money habits through fun, interactive lessons and real-world practice. Make learning about money engaging and enjoyable."
             },
             {
               icon: <Sparkles size={32} className="text-indigo-600" />,
               title: "Kid-Friendly Interface",
-              description: "Simple and engaging design that makes learning about money fun"
+              description: "Simple, colorful, and engaging interface designed specifically for children. Makes learning about money fun and accessible."
             },
             {
               icon: <BarChart size={32} className="text-indigo-600" />,
               title: "Smart Tracking",
-              description: "Monitor savings goals, chore completion, and spending patterns"
+              description: "Monitor savings goals, track chore completion, and watch your child's financial literacy grow with easy-to-understand progress reports."
             }
           ].map((feature, index) => (
             <div key={index} className="p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
@@ -112,6 +130,23 @@ function Home() {
               <p className="text-gray-600">{feature.description}</p>
             </div>
           ))}
+        </div>
+        {/* FAQ Section */}
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Frequently Asked Questions</h2>
+          <div className="space-y-6">
+            {faqs.map((faq, idx) => (
+              <div key={idx} className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="flex items-center">
+                  <PiggyBank className="w-5 h-5 text-indigo-600 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">{faq.question}</h3>
+                    <p className="text-gray-600">{faq.answer}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -130,7 +165,6 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/learn-more" element={<LearnMore />} />
                     <Route path="/pricing-page" element={<PricingPage />} />
                     <Route path="/success" element={<SuccessPage />} />
                     <Route path="/unauthorized" element={<UnauthorizedPage />} />

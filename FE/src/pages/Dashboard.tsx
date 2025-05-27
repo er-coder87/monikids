@@ -197,7 +197,7 @@ const Dashboard = () => {
               <TabButton tab="chores" icon={LayoutDashboard} label="Chores" />
               <TabButton tab="savings" icon={DollarSign} label="Savings" />
               <TabButton tab="expenses" icon={ShoppingCart} label="Expenses" />
-              {/* <TabButton tab="dashboard" icon={Home} label="Dashboard" /> */}
+              <TabButton tab="dashboard" icon={Home} label="Dashboard" />
             </div>
           </div>
 

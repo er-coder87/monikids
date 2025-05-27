@@ -10,6 +10,7 @@ interface Saving {
     date: Date
     isRecurring: boolean
     recurringFrequency?: 'daily' | 'weekly' | 'monthly'
+    type: 'saving' | 'cash_out'
 }
 
 interface SavingsContextType {
@@ -28,7 +29,8 @@ const transformApiTransaction = (transaction: ApiTransaction): Saving => ({
     amount: transaction.amount,
     description: transaction.description,
     isRecurring: false, // Default to false since API doesn't support recurring yet
-    recurringFrequency: 'monthly' // Default to monthly since API doesn't support recurring yet
+    recurringFrequency: 'monthly', // Default to monthly since API doesn't support recurring yet
+    type: transaction.type as 'saving' | 'cash_out'
 })
 
 const SavingsContext = createContext<SavingsContextType | undefined>(undefined)

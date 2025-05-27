@@ -1,5 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
+import { NavBar } from '../components/NavBar';
 
 const plans = [
     {
@@ -56,58 +57,62 @@ export function PricingPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-extrabold text-indigo-600 mb-12">Choose Your Plan</h1>
-            <div className="max-w-6xl w-full grid grid-cols-1 sm:grid-cols-3 gap-10">
-                {plans.map((plan) => (
-                    <div
-                        key={plan.id}
-                        className={`relative bg-white rounded-xl shadow-lg p-8 flex flex-col justify-between transition-transform
+            <NavBar />
+            <div className="container mx-auto px-4 py-20">
+
+                <h1 className="text-4xl font-extrabold text-indigo-600 mb-12">Choose Your Plan</h1>
+                <div className="max-w-6xl w-full grid grid-cols-1 sm:grid-cols-3 gap-10">
+                    {plans.map((plan) => (
+                        <div
+                            key={plan.id}
+                            className={`relative bg-white rounded-xl shadow-lg p-8 flex flex-col justify-between transition-transform
               ${plan.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.03]'}
             `}
-                        aria-disabled={plan.disabled}
-                    >
-                        {plan.isTrial && (
-                            <div className="absolute top-5 right-5 bg-indigo-100 text-indigo-700 text-xs font-semibold uppercase px-3 py-1 rounded-full tracking-wide shadow-sm select-none">
-                                Limited Time
-                            </div>
-                        )}
-                        <div>
-                            <h2 className={`text-3xl font-extrabold mb-2 ${plan.isTrial ? 'text-indigo-700' : 'text-gray-900'}`}>
-                                {plan.name}
-                            </h2>
-                            <p className={`text-indigo-600 text-2xl font-extrabold`}>
-                                {plan.price}
-                            </p>
-                            <ul className="mt-6 space-y-3 text-gray-600">
-                                {plan.features.map((feature, i) => (
-                                    <li key={i} className="flex items-center">
-                                        <svg
-                                            className={`w-5 h-5 mr-2 flex-shrink-0 ${plan.disabled ? 'text-gray-400' : 'text-indigo-500'}`}
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        {feature}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <button
-                            onClick={() => handleSelectPlan(plan.id, plan.disabled)}
-                            disabled={plan.disabled}
-                            className={`mt-8 w-full py-3 rounded-full font-semibold transition-colors
-                ${plan.disabled
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'}
-              `}
+                            aria-disabled={plan.disabled}
                         >
-                            {plan.disabled ? 'Coming Soon' : plan.isTrial ? 'Start Trial' : `Select ${plan.name}`}
-                        </button>
-                    </div>
-                ))}
+                            {plan.isTrial && (
+                                <div className="absolute top-5 right-5 bg-indigo-100 text-indigo-700 text-xs font-semibold uppercase px-3 py-1 rounded-full tracking-wide shadow-sm select-none">
+                                    Limited Time
+                                </div>
+                            )}
+                            <div>
+                                <h2 className={`text-3xl font-extrabold mb-2 ${plan.isTrial ? 'text-indigo-700' : 'text-gray-900'}`}>
+                                    {plan.name}
+                                </h2>
+                                <p className={`text-indigo-600 text-2xl font-extrabold`}>
+                                    {plan.price}
+                                </p>
+                                <ul className="mt-6 space-y-3 text-gray-600">
+                                    {plan.features.map((feature, i) => (
+                                        <li key={i} className="flex items-center">
+                                            <svg
+                                                className={`w-5 h-5 mr-2 flex-shrink-0 ${plan.disabled ? 'text-gray-400' : 'text-indigo-500'}`}
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <button
+                                onClick={() => handleSelectPlan(plan.id, plan.disabled)}
+                                disabled={plan.disabled}
+                                className={`mt-8 w-full py-3 rounded-full font-semibold transition-colors
+                ${plan.disabled
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'}
+              `}
+                            >
+                                {plan.disabled ? 'Coming Soon' : plan.isTrial ? 'Start Trial' : `Select ${plan.name}`}
+                            </button>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
