@@ -41,6 +41,11 @@ class ApiClient {
                 return { error: error.message || 'An error occurred' }
             }
 
+            // Handle 204 No Content response
+            if (response.status === 204) {
+                return { data: undefined }
+            }
+
             const data = await response.json()
             return { data }
         } catch (error) {

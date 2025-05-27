@@ -41,8 +41,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             if (!response.data?.transactions) throw new Error('No data received')
 
             const expensesData = response.data.transactions
+                .filter(transaction => transaction.type == 'expense')
                 .map(transformApiTransaction)
-                .filter(expense => expense.amount < 0);
 
             setExpenses(expensesData)
             setTotalExpenses(expensesData.reduce((sum, expense) => sum + expense.amount, 0))

@@ -13,10 +13,13 @@ interface EditExpenseModalProps {
 
 export function EditExpenseModal({ expense, categories, onClose, onSave }: EditExpenseModalProps) {
     const [editedExpense, setEditedExpense] = useState<Expense | null>(null);
+    const [displayAmount, setDisplayAmount] = useState<string>("");
 
     useEffect(() => {
         if (expense) {
             setEditedExpense(expense);
+            // Convert negative amount to positive for display
+            setDisplayAmount(Math.abs(expense.amount).toString());
         }
     }, [expense]);
 
@@ -25,8 +28,26 @@ export function EditExpenseModal({ expense, categories, onClose, onSave }: EditE
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editedExpense) {
-            onSave(editedExpense);
+            // Ensure the amount is negative when saving
+            const updatedExpense = {
+                ...editedExpense,
+                amount: -Math.abs(Number(displayAmount))
+            };
+            onSave(updatedExpense);
         }
+    };
+
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setDisplayAmount(value);
+        // Update the expense with negative amount
+        setEditedExpense(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                amount: -Math.abs(Number(value))
+            };
+        });
     };
 
     return (
@@ -62,8 +83,8 @@ export function EditExpenseModal({ expense, categories, onClose, onSave }: EditE
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                             <input
                                 type="number"
-                                value={editedExpense.amount}
-                                onChange={(e) => setEditedExpense({ ...editedExpense, amount: Number(e.target.value) })}
+                                value={displayAmount}
+                                onChange={handleAmountChange}
                                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 pl-8 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
                                 min="0"
                                 step="0.01"
@@ -79,7 +100,6 @@ export function EditExpenseModal({ expense, categories, onClose, onSave }: EditE
                             value={editedExpense.category}
                             onChange={(e) => setEditedExpense({ ...editedExpense, category: e.target.value })}
                             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
-                            required
                         >
                             {categories.map((category) => (
                                 <option key={category.id} value={category.name}>

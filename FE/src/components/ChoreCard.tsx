@@ -39,7 +39,7 @@ export function ChoreCard({ chore }: ChoreCardProps) {
             })
 
             addSaving({
-                description: `Done ${chore.description} on ${formattedDate}`,
+                description: `✔ Done ${chore.description}`,
                 amount: chore.allowanceAmount ?? 0,
                 date: today,
                 isRecurring: false,

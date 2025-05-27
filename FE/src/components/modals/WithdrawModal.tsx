@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PiggyBank, Coins } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface WithdrawModalProps {
     isOpen: boolean
@@ -11,10 +12,11 @@ interface WithdrawModalProps {
 export function WithdrawModal({ isOpen, onClose, onWithdraw, maxAmount }: WithdrawModalProps) {
     const [amount, setAmount] = useState('')
     const [error, setError] = useState('')
+    const [isAnimating, setIsAnimating] = useState(false)
 
     if (!isOpen) return null
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         const numAmount = parseFloat(amount)
 
@@ -28,15 +30,27 @@ export function WithdrawModal({ isOpen, onClose, onWithdraw, maxAmount }: Withdr
             return
         }
 
+        setIsAnimating(true)
         onWithdraw(numAmount)
-        setAmount('')
-        setError('')
-        onClose()
+
+        // Wait for animation to complete before closing
+        setTimeout(() => {
+            setAmount('')
+            setError('')
+            setIsAnimating(false)
+            onClose()
+        }, 3000)
     }
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 relative"
+            >
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                         <PiggyBank className="w-6 h-6 text-pink-500" />
@@ -89,7 +103,60 @@ export function WithdrawModal({ isOpen, onClose, onWithdraw, maxAmount }: Withdr
                         </button>
                     </div>
                 </form>
-            </div>
+
+                <AnimatePresence>
+                    {isAnimating && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.5 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.5 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                className="flex flex-col items-center"
+                            >
+                                <motion.div
+                                    animate={{
+                                        y: [-20, -150],
+                                        opacity: [1, 0],
+                                        scale: [1, 1.2],
+                                        rotate: [0, 5, -5, 0],
+                                    }}
+                                    transition={{
+                                        duration: 3,
+                                        ease: [0.4, 0, 0.2, 1],
+                                        times: [0, 0.2, 0.8, 1],
+                                    }}
+                                    className="text-4xl font-bold text-green-500"
+                                >
+                                    +${amount}
+                                </motion.div>
+                                <motion.div
+                                    animate={{
+                                        y: [-20, -150],
+                                        opacity: [1, 0],
+                                        scale: [1, 1.2],
+                                        rotate: [0, -5, 5, 0],
+                                    }}
+                                    transition={{
+                                        duration: 3,
+                                        ease: [0.4, 0, 0.2, 1],
+                                        times: [0, 0.2, 0.8, 1],
+                                        delay: 0.1,
+                                    }}
+                                    className="text-yellow-500"
+                                >
+                                    <Coins className="w-12 h-12" />
+                                </motion.div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
         </div>
     )
 } 

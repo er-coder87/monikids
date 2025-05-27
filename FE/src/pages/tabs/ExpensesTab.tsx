@@ -21,20 +21,20 @@ export function ExpensesTab({
     selectedPeriod,
     currentMonth
 }: ExpensesTabProps) {
-    const [expenses, setExpenses] = useState<Expense[]>([])
     const [categories, setCategories] = useState<Category[]>([])
-    const { expenses: allExpenses, addExpense, updateExpense, deleteExpense } = useExpenses()
+    const { expenses: allExpenses, addExpense, updateExpense, deleteExpense, isLoading } = useExpenses()
     const { addToast } = useToast()
+    const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([])
 
     // Filter expenses based on selected period
     useEffect(() => {
-        let filteredExpenses = [...allExpenses]
+        let filtered = [...allExpenses]
 
         switch (selectedPeriod) {
             case 'monthly':
                 const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
                 const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
-                filteredExpenses = allExpenses.filter(expense => {
+                filtered = allExpenses.filter(expense => {
                     const date = new Date(expense.date)
                     return date >= monthStart && date <= monthEnd
                 })
@@ -42,7 +42,7 @@ export function ExpensesTab({
             case 'yearly':
                 const yearStart = new Date(currentMonth.getFullYear(), 0, 1)
                 const yearEnd = new Date(currentMonth.getFullYear(), 11, 31)
-                filteredExpenses = allExpenses.filter(expense => {
+                filtered = allExpenses.filter(expense => {
                     const date = new Date(expense.date)
                     return date >= yearStart && date <= yearEnd
                 })
@@ -52,7 +52,7 @@ export function ExpensesTab({
                 break
         }
 
-        setExpenses(filteredExpenses)
+        setFilteredExpenses(filtered)
     }, [allExpenses, selectedPeriod, currentMonth])
 
     const handleAddExpense = async (newExpenseData: CreateExpense) => {
@@ -61,21 +61,17 @@ export function ExpensesTab({
                 ...newExpenseData,
                 date: newExpenseData.date || new Date()
             })
+            addToast('Expense added successfully', 'success')
         } catch (error: any) {
             console.error('Error adding expense:', error.message)
             addToast('Failed to add expense', 'error')
         }
     }
 
-    const handleEditExpense = async (id: string) => {
+    const handleEditExpense = async (expense: Expense) => {
         try {
-            const expenseToEdit = allExpenses.find(expense => expense.id === id)
-            if (!expenseToEdit) {
-                console.error('Expense not found')
-                return
-            }
-
-            await updateExpense(expenseToEdit)
+            await updateExpense(expense)
+            addToast('Expense updated successfully', 'success')
         } catch (error: any) {
             console.error('Error editing expense:', error.message)
             addToast('Failed to update expense', 'error')
@@ -85,6 +81,7 @@ export function ExpensesTab({
     const handleDeleteExpense = async (id: string) => {
         try {
             await deleteExpense(id)
+            addToast('Expense deleted successfully', 'success')
         } catch (error: any) {
             console.error('Error deleting expense:', error.message)
             addToast('Failed to delete expense', 'error')
@@ -95,7 +92,7 @@ export function ExpensesTab({
         setCategories(prev => [...prev, category])
     }
 
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+    const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0)
 
     return (
         <div className='flex flex-col space-y-4'>
@@ -103,7 +100,7 @@ export function ExpensesTab({
                 <TimePeriodSelector dateFormat={dateFormat} />
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-100 dark:border-gray-700 w-full">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -130,11 +127,12 @@ export function ExpensesTab({
 
             {/* --- Expense Table --- */}
             <ExpenseTable
-                expenses={expenses}
+                expenses={filteredExpenses}
                 onDelete={handleDeleteExpense}
                 onEdit={handleEditExpense}
                 dateFormat={dateFormat}
                 categories={categories}
+                isLoading={isLoading}
             />
         </div>
     )

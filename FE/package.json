@@ -21,6 +21,7 @@
     "@types/react-datepicker": "^6.2.0",
     "cookies-next": "^5.1.0",
     "date-fns": "^3.3.1",
+    "framer-motion": "^12.14.0",
     "lucide-react": "^0.358.0",
     "react": "^18.2.0",
     "react-datepicker": "^8.3.0",

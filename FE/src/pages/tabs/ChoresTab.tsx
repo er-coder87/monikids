@@ -74,6 +74,7 @@ export function ChoresTab() {
         )
     }
 
+    const choresWithoutDeleted = chores.filter(a => !a.isDeleted)
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -98,7 +99,7 @@ export function ChoresTab() {
                         <div>
                             <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400">Chores Completed</h2>
                             <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                                {(chores.filter(chore => (chore.currentCount ?? 0) >= (chore.maxCount ?? 0)).length)} / {chores.length}
+                                {(choresWithoutDeleted.filter(chore => (chore.currentCount ?? 0) >= (chore.maxCount ?? 0)).length)} / {choresWithoutDeleted.length}
                             </p>
                         </div>
                     </div>

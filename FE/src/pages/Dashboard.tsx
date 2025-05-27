@@ -1,4 +1,4 @@
-import { Sun, Moon, DollarSign, Cog, LayoutDashboard, Home, PiggyBank, Menu } from 'lucide-react';
+import { Sun, Moon, DollarSign, Cog, LayoutDashboard, Home, PiggyBank, Menu, ShoppingCart } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDarkMode from '../hooks/useDarkMode';
@@ -196,7 +196,7 @@ const Dashboard = () => {
               <TabButton tab="piggy-bank" icon={PiggyBank} label="Piggy Bank" />
               <TabButton tab="chores" icon={LayoutDashboard} label="Chores" />
               <TabButton tab="savings" icon={DollarSign} label="Savings" />
-              {/* <TabButton tab="expenses" icon={LayoutDashboard} label="Expenses" /> */}
+              <TabButton tab="expenses" icon={ShoppingCart} label="Expenses" />
               {/* <TabButton tab="dashboard" icon={Home} label="Dashboard" /> */}
             </div>
           </div>

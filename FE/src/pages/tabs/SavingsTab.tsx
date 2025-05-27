@@ -6,6 +6,7 @@ import { SavingTable } from "../../components/SavingTable"
 import { useSavings } from "../../contexts/SavingsContext"
 import { TimePeriodSelector } from "../../components/TimePeriodSelector"
 import { useTimePeriod } from "../../contexts/TimePeriodContext"
+import { useToast } from "../../contexts/ToastContext"
 
 interface PiggyBankTransaction {
     description: string
@@ -37,9 +38,10 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         recurringFrequency: 'monthly'
     })
 
-    const { savingsOrCashOuts, addSaving, updateSaving, deleteSaving } = useSavings()
+    const { savingsOrCashOuts, addSaving, updateSaving, deleteSaving, isLoading } = useSavings()
     const { startDate, endDate } = useTimePeriod()
     const [editingSaving, setEditingSaving] = useState<Saving | null>(null)
+    const { addToast } = useToast()
 
     const filteredSavings = savingsOrCashOuts.filter(saving => {
         const savingDate = new Date(saving.date)
@@ -59,9 +61,11 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
         try {
             if (editingSaving) {
                 await updateSaving({ ...transaction, id: editingSaving.id })
+                addToast('Saving updated successfully', 'success')
                 setEditingSaving(null)
             } else {
                 await addSaving(transaction)
+                addToast('Saving added successfully', 'success')
             }
 
             setFormData({
@@ -73,6 +77,7 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
             })
         } catch (error) {
             console.error('Error saving transaction:', error)
+            addToast('Failed to save transaction', 'error')
         }
     }
 
@@ -83,17 +88,21 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
     const handleSaveSaving = async (updatedSaving: Saving) => {
         try {
             await updateSaving(updatedSaving)
+            addToast('Saving updated successfully', 'success')
             setEditingSaving(null)
         } catch (error) {
             console.error('Error updating saving:', error)
+            addToast('Failed to update saving', 'error')
         }
     }
 
     const handleDeleteSaving = async (id: string) => {
         try {
             await deleteSaving(id)
+            addToast('Saving deleted successfully', 'success')
         } catch (error) {
             console.error('Error deleting saving:', error)
+            addToast('Failed to delete saving', 'error')
         }
     }
 
@@ -245,9 +254,10 @@ export function SavingsTab({ dateFormat }: SavingsTabProps) {
             </div>
 
             <SavingTable
-                savings={filteredSavings}
                 onEdit={handleEditSaving}
                 onDelete={handleDeleteSaving}
+                savings={filteredSavings}
+                isLoading={isLoading}
             />
 
             {editingSaving && (

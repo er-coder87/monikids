@@ -107,12 +107,11 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
         try {
             const token = await getAccessTokenSilently();
             const response = await apiClient.delete(`/transactions/${id}`, token)
+
             if (response.error) throw new Error(response.error)
 
-            const saving = savingsOrCashOuts.find(s => s.id === id)
-            if (saving) {
-                setSavingsOrCashOuts(prev => prev.filter(s => s.id !== id))
-            }
+            // For 204 responses, response.data will be undefined
+            setSavingsOrCashOuts(prev => prev.filter(s => s.id !== id))
         } catch (error) {
             console.error('Error deleting saving:', error)
             throw error
@@ -124,7 +123,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             const token = await getAccessTokenSilently();
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 amount: -amount, // Negative amount for withdrawal
-                description: 'Cash out',
+                description: '💰 Cash out',
                 type: 'cash_out',
                 transactionDate: new Date().toISOString(),
                 date: new Date().toISOString()
