@@ -50,11 +50,11 @@ function Home() {
               <span className="text-pink-600"> Digital Piggy Bank</span>
             </h1>
             <h3 className="text-xl md:text-xl text-gray-700 mb-4">
-              Smart money starts here
-              <span className="text-pink-400"> where kids begin their money journey</span>
+              Kickstarting your child’s
+              <span className="text-pink-400"> smart money journey</span>
             </h3>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              A fun digital piggy bank where kids can watch their savings grow, earn rewards by doing chores, and learn money smarts—all while having a blast!
+              A digital piggy bank that makes saving fun—helping kids earn chore rewards and build smart money habits from the start!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <button
@@ -99,7 +99,7 @@ function Home() {
           </div>
         </div>
         {/* Features Section */}
-        <div className="mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        <div className="mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-6">
           {[
             {
               icon: <PiggyBank size={32} className="text-indigo-600" />,
@@ -132,7 +132,7 @@ function Home() {
           ))}
         </div>
         {/* FAQ Section */}
-        <div className="max-w-4xl mx-auto">
+        <div className="mt-32 max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Frequently Asked Questions</h2>
           <div className="space-y-6">
             {faqs.map((faq, idx) => (
