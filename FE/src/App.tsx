@@ -14,10 +14,15 @@ import { ChoresProvider } from './contexts/ChoresContext';
 import { PricingPage } from './pages/PricingPage';
 import { SuccessPage } from './pages/SuccessPage';
 import { useAuth0 } from '@auth0/auth0-react';
+import { RequireAuth } from './components/RequireAuth';
+import { useRegisterUser } from './hooks/useRegisterUser';
+import { LoginPage } from './pages/LogInPage';
 
 function Home() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth0();
+  useRegisterUser();
+
   const faqs = [
     {
       question: "Is DigiPig suitable for my child's age?",
@@ -155,30 +160,28 @@ function Home() {
 
 function App() {
   return (
-    <TimePeriodProvider>
-      <SavingsProvider>
-        <GoodDeedsProvider>
-          <ChoresProvider>
-            <Router>
-              <div className="flex flex-col min-h-screen">
-                <div className="flex-grow">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/pricing-page" element={<PricingPage />} />
-                    <Route path="/success" element={<SuccessPage />} />
-                    <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                    <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/legal/terms-of-service" element={<TermsOfService />} />
-                  </Routes>
-                </div>
-                <Footer />
-              </div>
-            </Router>
-          </ChoresProvider>
-        </GoodDeedsProvider>
-      </SavingsProvider>
-    </TimePeriodProvider>
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/pricing-page" element={<PricingPage />} />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/legal/terms-of-service" element={<TermsOfService />} />
+
+
+          {/* Private routes wrapped in auth guard */}
+          <Route element={<RequireAuth />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/success" element={<SuccessPage />} />
+            {/* more private routes */}
+          </Route>
+        </Routes>
+      </div>
+      <Footer />
+    </div>
   );
 }
 

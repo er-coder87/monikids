@@ -21,12 +21,14 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
 builder.Services.AddScoped<IChoreRepository, ChoreRepository>();
 builder.Services.AddScoped<IGoodDeedRepository, GoodDeedRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Register your custom services
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IChoreService, ChoreService>();
 builder.Services.AddScoped<IGoodDeedService, GoodDeedService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddDbContext<PostgresContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

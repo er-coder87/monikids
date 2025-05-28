@@ -42,7 +42,7 @@ export const NavBar = () => {
                                 </button>
                             ) : (
                                 <button
-                                    onClick={() => loginWithRedirect()}
+                                    onClick={() => navigate('/login')}
                                     className="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors"
                                 >
                                     Sign in

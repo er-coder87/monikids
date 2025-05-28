@@ -1,6 +1,5 @@
 import { Sun, Moon, DollarSign, Cog, LayoutDashboard, Home, PiggyBank, Menu, ShoppingCart } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useDarkMode from '../hooks/useDarkMode';
 import { ExportCsvModal } from '../modals/ExportCsvModal';
 import UnauthorizedPage from './UnauthorizedPage';
@@ -16,7 +15,6 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useChores } from '../contexts/ChoresContext';
 import { useGoodDeeds } from '../contexts/GoodDeedsContext';
-import { fetchExpenses } from '../services/ExpenseApi';
 import { useExpenses } from '../contexts/ExpenseContext';
 import { useSavings } from '../contexts/SavingsContext';
 

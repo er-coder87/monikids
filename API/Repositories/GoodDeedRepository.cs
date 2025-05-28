@@ -5,6 +5,7 @@ namespace ExpenseTrackerApi.Repositories;
 
 public interface IGoodDeedRepository
 {
+    Task<GoodDeed> CreateGoodDeedAsync(long userId);
     Task<IEnumerable<GoodDeed>> GetGoodDeedsAsync(string externalUserId);
     Task<GoodDeed?> GetGoodDeedByIdAsync(string externalUserId);
     Task<GoodDeed?> UpdateGoodDeedAsync(string externalUserId, GoodDeed goodDeed);
@@ -13,6 +14,29 @@ public interface IGoodDeedRepository
 public class GoodDeedRepository(PostgresContext context, ILogger<GoodDeedRepository> logger)
     : IGoodDeedRepository
 {
+    public async Task<GoodDeed> CreateGoodDeedAsync(long userId)
+    {
+        try
+        {
+            var goodDeed = new GoodDeed
+            {
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                CurrentCount = 0
+            };
+
+            context.GoodDeeds.Add(goodDeed);
+            await context.SaveChangesAsync();
+
+            return goodDeed;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating good deed for user {UserId}", userId);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<GoodDeed>> GetGoodDeedsAsync(string externalUserId)
     {
         try

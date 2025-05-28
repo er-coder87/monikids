@@ -13,7 +13,7 @@ public partial class User
 
     public string? ExternalId { get; set; }
 
-    public string PasswordHash { get; set; } = null!;
+    public string? PasswordHash { get; set; }
 
     public virtual ICollection<Budget> Budgets { get; set; } = new List<Budget>();
 
