@@ -5,7 +5,7 @@ import { Eye, EyeOff, Mail } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { NavBar } from '../components/NavBar';
 
-const SignupPage = () => {
+const SignPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -261,4 +261,4 @@ const SignupPage = () => {
     );
 };
 
-export default SignupPage;
+export default SignPage;

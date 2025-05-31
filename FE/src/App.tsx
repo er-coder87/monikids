@@ -10,10 +10,10 @@ import { Footer } from './components/Footer';
 import { PricingPage } from './pages/PricingPage';
 import { SuccessPage } from './pages/SuccessPage';
 import { useRegisterUser } from './hooks/useRegisterUser';
-import SignupPage from './pages/SignUpPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import LoginPage from './pages/LogInPage';
 import useAuth from './hooks/useAuth';
+import SignPage from './pages/SignPage';
 
 function Home() {
   const navigate = useNavigate();
@@ -163,7 +163,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signup" element={<SignPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/pricing-page" element={<PricingPage />} />
           <Route path="/success" element={<SuccessPage />} />
