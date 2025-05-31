@@ -177,6 +177,7 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.ExternalId).HasColumnName("external_id");
             entity.Property(e => e.PasswordHash).HasColumnName("passwordHash");
+            entity.Property(e => e.StripeCustomerId).HasColumnName("stripeCustomerId");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -15,6 +15,8 @@ public partial class User
 
     public string? PasswordHash { get; set; }
 
+    public string? StripeCustomerId { get; set; }
+
     public virtual ICollection<Budget> Budgets { get; set; } = new List<Budget>();
 
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();

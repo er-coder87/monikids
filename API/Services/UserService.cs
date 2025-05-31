@@ -9,6 +9,7 @@ public interface IUserService
 {
     Task<UserDto?> FindUserByExternalId(string externalUserId);
     Task<UserDto> CreateUser(string externalUserId, CreateUserRequestDto dto);
+    Task UpdateUserWithCheckSession(string externalUserId, string stripeCustomerId, string subscriptionId);
 }
 
 public class UserService(IUserRepository userRepository, IGoodDeedRepository goodDeedRepository) : IUserService
@@ -34,4 +35,10 @@ public class UserService(IUserRepository userRepository, IGoodDeedRepository goo
 
         return user.ToDto();
     }
+    
+    public async Task UpdateUserWithCheckSession(string externalUserId, string stripeCustomerId, string subscriptionId)
+    {
+        await userRepository.UpdateUserWithCheckSession(externalUserId, stripeCustomerId);
+    }
+
 }
