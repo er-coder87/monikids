@@ -48,7 +48,6 @@ function Dashboard() {
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
-      console.log('isAuthenticated', isAuthenticated);
       if (!isAuthenticated) return;
       try {
         await Promise.all([

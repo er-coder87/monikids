@@ -21,14 +21,12 @@ export default function LoginPage() {
         setIsLoading(true);
         setLoginError('');
         try {
-            console.log('Signing in with Google');
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: 'https://localhost:5173/dashboard'
+                    redirectTo: window.location.origin
                 }
             });
-            console.log('Error:', error);
             if (error) {
                 setLoginError(error.message);
             } else {
