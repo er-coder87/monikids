@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
-import { useAuth0 } from '@auth0/auth0-react'
 import { Saving } from '../models/Saving'
+import useAuth from '../hooks/useAuth'
 
 interface SavingsContextType {
     savingsOrCashOuts: Saving[]
@@ -29,14 +29,13 @@ const SavingsContext = createContext<SavingsContextType | undefined>(undefined)
 export function SavingsProvider({ children }: { children: ReactNode }) {
     const [savingsOrCashOuts, setSavingsOrCashOuts] = useState<Saving[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
+    const { supabaseClient } = useAuth();
 
     const fetchSaving = async () => {
-        if (!isAuthenticated || isAuthLoading) return
-
         setIsLoading(true)
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions', token)
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
@@ -54,7 +53,8 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
 
     const addSaving = useCallback(async (saving: Omit<Saving, 'id'>) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 ...saving,
                 type: 'saving', // Mark as savings transaction
@@ -67,14 +67,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             const newSaving = transformApiTransaction(response.data.transaction)
             setSavingsOrCashOuts(prev => [...prev, newSaving])
         } catch (error) {
-            console.error('Error adding saving:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }, [])
 
     const updateSaving = useCallback(async (updatedSaving: Saving) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.put<ApiResponse>(`/transactions/${updatedSaving.id}`, {
                 ...updatedSaving,
                 category: 'Savings',
@@ -91,14 +91,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             const newTotal = savingsOrCashOuts.reduce((sum, saving) =>
                 saving.id === updatedSaving.id ? sum + updatedData.amount : sum + saving.amount, 0)
         } catch (error) {
-            console.error('Error updating saving:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }, [savingsOrCashOuts])
 
     const deleteSaving = useCallback(async (id: string) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.delete(`/transactions/${id}`, token)
 
             if (response.error) throw new Error(response.error)
@@ -106,14 +106,14 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             // For 204 responses, response.data will be undefined
             setSavingsOrCashOuts(prev => prev.filter(s => s.id !== id))
         } catch (error) {
-            console.error('Error deleting saving:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }, [savingsOrCashOuts])
 
     const withdraw = useCallback(async (amount: number) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.post<ApiResponse>('/transactions', {
                 amount: -amount, // Negative amount for withdrawal
                 description: '💰 Cash out',
@@ -128,8 +128,7 @@ export function SavingsProvider({ children }: { children: ReactNode }) {
             const newSaving = transformApiTransaction(response.data.transaction)
             setSavingsOrCashOuts(prev => [...prev, newSaving])
         } catch (error) {
-            console.error('Error withdrawing money:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }, [])
 

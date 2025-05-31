@@ -1,6 +1,6 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
 import { NavBar } from '../components/NavBar';
+import useAuth from '../hooks/useAuth';
 
 const plans = [
     {
@@ -41,15 +41,13 @@ const plans = [
 ];
 
 export function PricingPage() {
-    const { isAuthenticated, loginWithRedirect } = useAuth0();
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
     const handleSelectPlan = (planId: string, disabled: boolean) => {
         if (disabled) return;
         if (!isAuthenticated) {
-            loginWithRedirect({
-                appState: { returnTo: `/subscribe/${planId}` },
-            });
+
         } else {
             navigate(`/subscribe/${planId}`);
         }

@@ -1,5 +1,6 @@
 import { Sun, Moon, DollarSign, Cog, LayoutDashboard, Home, PiggyBank, Menu, ShoppingCart } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useDarkMode from '../hooks/useDarkMode';
 import { ExportCsvModal } from '../modals/ExportCsvModal';
 import UnauthorizedPage from './UnauthorizedPage';
@@ -11,18 +12,20 @@ import { ExpensesTab } from "./tabs/ExpensesTab";
 import { useTimePeriod } from '../contexts/TimePeriodContext';
 import { SavingsTab } from './tabs/SavingsTab';
 import { ChoresTab } from './tabs/ChoresTab';
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useChores } from '../contexts/ChoresContext';
 import { useGoodDeeds } from '../contexts/GoodDeedsContext';
 import { useExpenses } from '../contexts/ExpenseContext';
 import { useSavings } from '../contexts/SavingsContext';
+import useAuth from '../hooks/useAuth';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { GenericError } from '../components/GenericError';
 
 type Tab = 'dashboard' | 'piggy-bank' | 'chores' | 'savings' | 'expenses' | 'budget';
 
-const Dashboard = () => {
+function Dashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('piggy-bank');
-  const { isAuthenticated, isLoading: isAuthLoading, logout } = useAuth0();
+  const { isAuthenticated, session } = useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTabsOpen, setIsTabsOpen] = useState(false);
@@ -35,6 +38,7 @@ const Dashboard = () => {
   const { fetchGoodDeed } = useGoodDeeds();
   const { fetchExpense } = useExpenses();
   const { fetchSaving } = useSavings();
+  const [pageStatus, setPageStatus] = useState<'idle' | 'initialising' | 'error' | 'success'>('initialising');
 
   const openExportModal = () => {
     setIsSettingsOpen(false);
@@ -42,13 +46,27 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && !isAuthLoading) {
-      fetchChores()
-      fetchGoodDeed()
-      fetchExpense()
-      fetchSaving()
-    }
-  }, [isAuthenticated, isAuthLoading])
+    let isMounted = true;
+    const fetchData = async () => {
+      console.log('isAuthenticated', isAuthenticated);
+      if (!isAuthenticated) return;
+      try {
+        await Promise.all([
+          fetchChores(),
+          fetchGoodDeed(),
+          fetchExpense(),
+          fetchSaving()
+        ]);
+        setPageStatus('success'); // Assuming you have a 'success' status
+      } catch (error) {
+        setPageStatus('error');
+      }
+    };
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, setPageStatus]);
 
   useEffect(() => {
     if (darkMode) {
@@ -83,10 +101,24 @@ const Dashboard = () => {
     };
   }, [settingsRef, tabsRef]);
 
-  if (isAuthLoading) {
-    return <LoadingSpinner />;
+  // Show loading state while checking authentication or initializing data
+  if (session === undefined || pageStatus === 'initialising') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
+  if (pageStatus === 'error') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <GenericError />
+      </div>
+    );
+  }
+
+  // Show unauthorized page if not authenticated
   if (!isAuthenticated) {
     return <UnauthorizedPage />;
   }
@@ -231,6 +263,6 @@ const Dashboard = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Dashboard;

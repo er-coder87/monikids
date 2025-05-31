@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { Expense } from '../models/Expense'
 import { apiClient } from '../services/ApiClient'
 import type { ApiTransaction, ApiResponse } from '../types/api'
-import { useAuth0 } from '@auth0/auth0-react'
+import useAuth from '../hooks/useAuth'
 
 const transformApiTransaction = (transaction: ApiTransaction): Expense => ({
     id: transaction.id.toString(),
@@ -28,14 +28,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const [expenses, setExpenses] = useState<Expense[]>([])
     const [totalExpenses, setTotalExpenses] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
-    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
+    const { supabaseClient } = useAuth();
 
     const fetchExpense = async () => {
-        if (!isAuthenticated || isAuthLoading) return
-
         setIsLoading(true)
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.get<{ transactions: ApiTransaction[] }>('/transactions', token)
             if (response.error) throw new Error(response.error)
             if (!response.data?.transactions) throw new Error('No data received')
@@ -47,8 +46,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             setExpenses(expensesData)
             setTotalExpenses(expensesData.reduce((sum, expense) => sum + expense.amount, 0))
         } catch (error) {
-            console.error('Error fetching expenses:', error)
-            throw error
+            throw new Error('Error calling API')
         } finally {
             setIsLoading(false)
         }
@@ -61,7 +59,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                 amount: -Math.abs(expense.amount),
                 type: 'expense'
             };
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.post<ApiResponse>('/transactions', adjustedExpense, token)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
@@ -70,14 +69,14 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             setExpenses(prev => [...prev, newExpense])
             setTotalExpenses(prev => prev + expense.amount)
         } catch (error) {
-            console.error('Error adding expense:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }
 
     const updateExpense = async (updatedExpense: Expense) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.put<ApiResponse>(`/transactions/${updatedExpense.id}`, updatedExpense, token)
             if (response.error) throw new Error(response.error)
             if (!response.data) throw new Error('No data received')
@@ -90,14 +89,14 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                 expense.id === updatedExpense.id ? sum + updatedData.amount : sum + expense.amount, 0)
             setTotalExpenses(newTotal)
         } catch (error) {
-            console.error('Error updating expense:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }
 
     const deleteExpense = async (id: string) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.delete(`/transactions/${id}`, token)
             if (response.error) throw new Error(response.error)
 
@@ -107,8 +106,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                 setExpenses(prev => prev.filter(e => e.id !== id))
             }
         } catch (error) {
-            console.error('Error deleting expense:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }
 

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
 import { ChoreDto } from '../models/ChoreDto'
-import { useAuth0 } from '@auth0/auth0-react'
+import useAuth from '../hooks/useAuth'
 
 interface CreateChoreRequest {
     description: string
@@ -27,14 +27,13 @@ interface ChoresProviderProps {
 export function ChoresProvider({ children }: ChoresProviderProps) {
     const [chores, setChores] = useState<ChoreDto[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
+    const { supabaseClient } = useAuth();
 
-    async function fetchChores() {
-        if (!isAuthenticated || isAuthLoading) return
-
+    const fetchChores = async () => {
         setIsLoading(true)
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.get<ChoreDto[]>('/chores', token)
 
             if (response.error) {
@@ -48,7 +47,7 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
 
             setChores(response.data)
         } catch (error) {
-            console.error('Error fetching chores:', error)
+            throw new Error('Error calling API')
         } finally {
             setIsLoading(false)
         }
@@ -57,7 +56,8 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
     const addChore = async (chore: CreateChoreRequest) => {
         setIsLoading(true)
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.post<ChoreDto>('/chores', chore, token)
 
             if (response.error) {
@@ -71,7 +71,7 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
             setChores(prev => [...prev, response.data as ChoreDto])
         } catch (error) {
             console.error('Error adding chore:', error)
-            throw error
+            throw new Error('Error calling API')
         } finally {
             setIsLoading(false)
         }
@@ -84,7 +84,8 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
         ))
 
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.put<ChoreDto>(`/chores/${choreId}`, updates, token)
 
             if (response.error) {
@@ -104,8 +105,7 @@ export function ChoresProvider({ children }: ChoresProviderProps) {
                 chore.id === choreId ? (response.data as ChoreDto) : chore
             ))
         } catch (error) {
-            console.error('Error updating chore:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }
 

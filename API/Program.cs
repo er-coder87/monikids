@@ -65,42 +65,16 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options =>
-//     {
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             ValidateIssuer = true,
-//             ValidateAudience = true,
-//             ValidateLifetime = true,
-//             ValidateIssuerSigningKey = true,
-//             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-//             ValidAudience = builder.Configuration["JwtSettings:Audience"],
-//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]))
-//         };
-//         
-//         options.Events = new JwtBearerEvents
-//         {
-//             OnMessageReceived = context =>
-//             {
-//                 // Get the JWT from the cookie
-//                 context.Token = context.Request.Cookies["jwt"];
-//                 return Task.CompletedTask;
-//             }
-//         };
-//     });
-
+var bytes = Encoding.UTF8.GetBytes(builder.Configuration["Authentication:JwtSecret"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://dev-o3mf2dp3vmtc45o8.au.auth0.com";
-        options.Audience = "https://localhost:5096"; // match Auth0 API identifier
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(bytes),
+            ValidAudience = builder.Configuration["Authentication:ValidAudience"],
+            ValidIssuer = builder.Configuration["Authentication:ValidIssuer"],
         };
     });
 

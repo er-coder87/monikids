@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { apiClient } from '../services/ApiClient'
-import { useAuth0 } from '@auth0/auth0-react'
+import useAuth from '../hooks/useAuth'
 
 interface GoodDeedDto {
     id: number
@@ -34,14 +34,13 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
         currentCount: 0
     })
     const [isLoading, setIsLoading] = useState(true)
-    const { isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0()
+    const { supabaseClient } = useAuth();
 
     async function fetchGoodDeed() {
-        if (!isAuthenticated || isAuthLoading) return
-
         setIsLoading(true)
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.get<{ goodDeeds: GoodDeedDto }>('/good-deeds', token)
             if (response.error) {
                 if (response.error.startsWith('401:')) return
@@ -51,7 +50,7 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
 
             setGoodDeed(response.data.goodDeeds)
         } catch (error) {
-            console.error('Error fetching good deed:', error)
+            throw new Error('Error calling API')
         } finally {
             setIsLoading(false)
         }
@@ -59,7 +58,8 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
 
     const updateGoodDeed = async (request: UpdateGoodDeedRequest) => {
         try {
-            const token = await getAccessTokenSilently();
+            const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+            const token = sessionData?.session?.access_token || '';
             const response = await apiClient.put<{ goodDeeds: GoodDeedDto }>(`/good-deeds`, request, token)
 
             if (response.error) {
@@ -74,8 +74,7 @@ export function GoodDeedsProvider({ children }: GoodDeedsProviderProps) {
             }
             setGoodDeed(response.data.goodDeeds)
         } catch (error) {
-            console.error('Error updating good deed:', error)
-            throw error
+            throw new Error('Error calling API')
         }
     }
 

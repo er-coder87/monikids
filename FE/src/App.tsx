@@ -7,20 +7,17 @@ import PrivacyPolicy from './pages/legal/privacy-policy';
 import TermsOfService from './pages/legal/terms-of-service';
 import { NavBar } from './components/NavBar';
 import { Footer } from './components/Footer';
-import { TimePeriodProvider } from './contexts/TimePeriodContext';
-import { SavingsProvider } from './contexts/SavingsContext';
-import { GoodDeedsProvider } from './contexts/GoodDeedsContext';
-import { ChoresProvider } from './contexts/ChoresContext';
 import { PricingPage } from './pages/PricingPage';
 import { SuccessPage } from './pages/SuccessPage';
-import { useAuth0 } from '@auth0/auth0-react';
-import { RequireAuth } from './components/RequireAuth';
 import { useRegisterUser } from './hooks/useRegisterUser';
-import { LoginPage } from './pages/LogInPage';
+import SignupPage from './pages/SignUpPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import LoginPage from './pages/LogInPage';
+import useAuth from './hooks/useAuth';
 
 function Home() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth0();
+  const { isAuthenticated } = useAuth();
   useRegisterUser();
 
   const faqs = [
@@ -158,6 +155,7 @@ function Home() {
   );
 }
 
+
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -165,19 +163,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/pricing-page" element={<PricingPage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/legal/terms-of-service" element={<TermsOfService />} />
-
-
-          {/* Private routes wrapped in auth guard */}
-          <Route element={<RequireAuth />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/success" element={<SuccessPage />} />
-            {/* more private routes */}
-          </Route>
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </div>
       <Footer />
