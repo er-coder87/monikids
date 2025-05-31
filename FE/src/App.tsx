@@ -22,20 +22,20 @@ function Home() {
 
   const faqs = [
     {
-      question: "Is DigiPig suitable for my child's age?",
-      answer: "DigiPig is designed for kids aged 5 to 15, with features that adapt as your child grows. Parents can customize the experience to match their child's age and understanding."
+      question: "Is DigiPiggy suitable for my child's age?",
+      answer: "DigiPiggy is designed for kids aged 5 to 15, with features that adapt as your child grows. Parents can customize the experience to match their child's age and understanding."
     },
     {
-      question: "How does DigiPig help teach financial literacy?",
-      answer: "With interactive tools like the digital piggy bank, chore rewards, and savings goals, DigiPig helps children build real money skills in a safe and fun environment."
+      question: "How does DigiPiggy help teach financial literacy?",
+      answer: "With interactive tools like the digital piggy bank, chore rewards, and savings goals, DigiPiggy helps children build real money skills in a safe and fun environment."
     },
     {
-      question: "Is DigiPig connected to a bank or third-party provider?",
-      answer: "No, DigiPig isn’t connected to any bank or external service. It works just like a traditional piggy bank—only digital and accessible through your devices. Parents set the allowance and give the money to their kids in person, keeping everything simple and under their control."
+      question: "Is DigiPiggy connected to a bank or third-party provider?",
+      answer: "No, DigiPiggy isn’t connected to any bank or external service. It works just like a traditional piggy bank—only digital and accessible through your devices. Parents set the allowance and give the money to their kids in person, keeping everything simple and under their control."
     },
     {
       question: "Is my child's financial data secure?",
-      answer: "Absolutely. DigiPig uses high-standard security measures to protect your child’s information. Parents have full control over all transactions and settings. For more details, visit our Privacy Policy page."
+      answer: "Absolutely. DigiPiggy uses high-standard security measures to protect your child’s information. Parents have full control over all transactions and settings. For more details, visit our Privacy Policy page."
     },
   ];
 
@@ -86,7 +86,7 @@ function Home() {
             See How It Works
           </h2>
           <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-            Watch our quick demo to see how DigiPig helps you teach financial literacy to your children through fun and interactive piggybank management.
+            Watch our quick demo to see how DigiPiggy helps you teach financial literacy to your children through fun and interactive piggybank management.
           </p>
           <div className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl">
             <div className="aspect-w-16 aspect-h-9">

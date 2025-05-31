@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
                             <section className="mb-8">
                                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
                                 <p className="text-gray-600 mb-4">
-                                    Welcome to DigiPig. We respect your privacy and are committed to protecting your personal data.
+                                    Welcome to DigiPiggy. We respect your privacy and are committed to protecting your personal data.
                                     This privacy policy will inform you about how we look after your personal data when you visit our
                                     website and tell you about your privacy rights and how the law protects you.
                                 </p>
@@ -82,7 +82,7 @@ export default function PrivacyPolicy() {
                                     If you have any questions about this privacy policy or our privacy practices, please email us at
                                 </p>
                                 <p className="text-gray-600">
-                                    privacy@digipig.com<br />
+                                    privacy@DigiPiggy.com<br />
                                 </p>
                             </section>
                         </div>

@@ -39,7 +39,7 @@ export const NavBar = () => {
                         onClick={() => navigate('/')}
                         className="text-2xl font-bold text-indigo-600 cursor-pointer"
                     >
-                        DigiPig
+                        DigiPiggy
                     </h1>
                     <div className="flex gap-4 items-center">
                         {isAuthenticated ? (
